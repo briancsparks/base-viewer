@@ -3,7 +3,7 @@ import {
   Nav, Navbar, NavItem, Grid, Tabs, Tab
 }                             from 'react-bootstrap';
 
-import logo from './logo.svg';
+import './short.css'
 import './App.css';
 
 class App extends Component {
