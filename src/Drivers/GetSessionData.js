@@ -93,7 +93,7 @@ export default function getSessionData() {
   attachToFeed();
 
   // Then, let it connect; then send request to the server for data
-  const queryEndpoint = config.urlFor('query', `querySessions?destKey=asdf&requestId=${dataBootstrap}&limit=3`, true);
+  const queryEndpoint = config.urlFor('query', `querySessions?destKey=asdf&requestId=${dataBootstrap}&limit=60`, true);
   sg.setTimeout(2200, function() {
 
     return sg.until(function(again, last, count, elapsed) {

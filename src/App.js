@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import {
   Nav, Navbar, NavItem, Grid
 }                             from 'react-bootstrap';
+import {
+  ItemList
+}                             from './Components/ItemList';
 
 import { TopTabs } from './Components/TopTabsComponent';
 
@@ -15,7 +18,12 @@ import './App.css';
 
 class App extends Component {
 
+
   render() {
+
+    // const sessions = Array.prototype.slice.apply(telemetryStore.data.sessions);
+    // const sessions = Array.prototype.slice.apply(telemetryStore.data.sessions);
+
     return (
       <div className="App">
         <Navbar inverse fluid fixedTop>
@@ -26,6 +34,8 @@ class App extends Component {
               <a href="/">Netlab Telemetry Viewer</a>
 
             </Navbar.Brand>
+            <ItemList itemType="clients"  itemKeyName="clientId" />
+            <ItemList itemType="sessions" itemKeyName="sessionId" />
           </Navbar.Header>
 
           <Navbar.Collapse>
