@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import {
   Tabs, Tab
 }                             from 'react-bootstrap';
@@ -15,7 +15,7 @@ export class TopTabs extends Component {
   render() {
     return (
       <div>
-        <Tabs activeKey={1} id="top-tabs">
+        <Tabs id="top-tabs">
           <Tab eventKey={1} title="Scratch">
             A tab
           </Tab>

@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 import {
-  Nav, Navbar, NavItem, Grid, Tabs, Tab
+  Nav, Navbar, NavItem, Grid
 }                             from 'react-bootstrap';
+
+import { TopTabs } from './Components/TopTabsComponent';
+
+import getSessionData       from './Drivers/GetSessionData';
 
 import './short.css'
 import './App.css';
-import { TopTabs } from './Components/TopTabsComponent';
 
 class App extends Component {
 
@@ -40,6 +43,10 @@ class App extends Component {
 
       </div>
     );
+  }
+
+  componentDidMount() {
+    getSessionData();
   }
 }
 

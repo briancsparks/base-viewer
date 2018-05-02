@@ -2,6 +2,7 @@
   "name": "base-viewer",
   "version": "0.1.0",
   "private": true,
+  "proxy":"http://local.mobilewebassist.net",
   "dependencies": {
     "ajv": "^6.4.0",
     "bootstrap": "^3.3.7",
@@ -9,7 +10,11 @@
     "react-bootstrap": "^0.32.1",
     "react-dom": "^16.3.2",
     "react-router": "^4.2.0",
-    "react-scripts": "1.1.4"
+    "react-scripts": "1.1.4",
+    "sgsg": "^0.9.51",
+    "superagent": "^3.8.3",
+    "underscore": "^1.9.0",
+    "url": "^0.11.0"
   },
   "scripts": {
     "start": "react-scripts start",
