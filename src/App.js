@@ -5,6 +5,7 @@ import {
 
 import './short.css'
 import './App.css';
+import { TopTabs } from './Components/TopTabsComponent';
 
 class App extends Component {
 
@@ -31,14 +32,8 @@ class App extends Component {
         {/* Main Content Area */}
         <div>
           <Grid fluid={true}>
-
-            <div>
-              <Tabs activeKey={1} id="top-tabs">
-                <Tab eventKey={1} title="Scratch">
-                  A tab
-                </Tab>
-              </Tabs>
-            </div>
+            <TopTabs>
+            </TopTabs>
 
           </Grid>
         </div>
