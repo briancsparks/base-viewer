@@ -6,6 +6,9 @@ import {
 }                             from 'react-bootstrap';
 import telemetryStore         from '../Stores/TelemetryStore';
 import _                      from 'underscore';
+import {
+  setCurrentSession
+}                             from '../Actions/Actions';
 
 import '../short.css';
 
@@ -24,6 +27,8 @@ export class ItemList extends Component {
     const itemType    = this.props.itemType     || ''; 
     const itemKeyName = this.props.itemKeyName  || '';
 
+    const myOnSelect  = this._onItemChosen.bind(this);
+
     return (
       <DropdownButton
           bsStyle={'default'}
@@ -33,7 +38,7 @@ export class ItemList extends Component {
       >
       {
         items.map((item, i) => (
-          <MenuItem eventKey={i} key={i} >{item[itemKeyName]}</MenuItem>
+          <MenuItem eventKey={i} key={i} onSelect={myOnSelect} >{item[itemKeyName]}</MenuItem>
         ))
       }
       </DropdownButton>
@@ -42,6 +47,12 @@ export class ItemList extends Component {
 
   componentDidMount() {
     telemetryStore.addChangeListener(this._onChange.bind(this));
+  }
+
+  _onItemChosen(eventKey, event) {
+    const item = this.state.items[eventKey];
+    console.log(`onItemChosen ${eventKey}`, item);
+    setCurrentSession(item);
   }
 
   _onChange() {

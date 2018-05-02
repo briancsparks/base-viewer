@@ -5,8 +5,8 @@ import Dispatcher             from '../Flux/Dispatcher';
 const sg                      = require('sgsg/lite');
 
 const Actions = sg.keyMirror([
-  'ADD_SESSIONS',
-  'ADD_CLIENTS'
+  'ADD_SESSIONS', 'SET_CURRENT_SESSION',
+  'ADD_CLIENTS',  'SET_CURRENT_CLIENT'
 ]);
 
 
@@ -28,14 +28,32 @@ export function addClients(clientData) {
   });
 };
 
+export function setCurrentSession(sessionData) {
+  if (!sessionData) { return; }
+
+  Dispatcher.handleAction({
+    actionType    : Actions.SET_CURRENT_SESSION,
+    data          : sessionData
+  });
+};
+
+export function setCurrentClient(clientData) {
+  if (!clientData) { return; }
+
+  Dispatcher.handleAction({
+    actionType    : Actions.SET_CURRENT_CLIENT,
+    data          : clientData
+  });
+};
+
 export function dyamicAction(key_, data) {
   if (!data) { return; }
 
   var key = '';
   if (key_ === 'sessions') {
-    key = 'ADD_SESSIONS';
+    key = Actions.ADD_SESSIONS;
   } else if (key_ === 'clients') {
-    key = 'ADD_CLIENTS';
+    key = Actions.ADD_CLIENTS;
   }
 
   Dispatcher.handleAction({

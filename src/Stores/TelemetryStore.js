@@ -13,8 +13,10 @@ class TelemetryStore extends EventEmitter {
     super();
 
     this.data = {
-      sessions  : [],
-      clients   : []
+      sessions            : [],
+      clients             : [],
+      currentSessionId    : '',
+      currentClientId     : ''
     };
 
     Dispatcher.register(this._handleDispatch.bind(this));
@@ -29,10 +31,18 @@ class TelemetryStore extends EventEmitter {
       didChange = this._addSessions(data);
       break;
 
+    case Actions.SET_CURRENT_SESSION:
+      didChange = this._setCurrentSession(data);
+      break;
+
     case Actions.ADD_CLIENTS:
       didChange = this._addClients(data);
       break;
 
+    case Actions.SET_CURRENT_CLIENT:
+    didChange = this._setCurrentClient(data);
+    break;
+    
     default:
       break;
     }
@@ -54,6 +64,16 @@ class TelemetryStore extends EventEmitter {
     return true;
   }
 
+  _setCurrentSession(session) {
+    const newSessionId = session.sessionId || session;
+    if (newSessionId === this.data.currentSessionId) {
+      return false;
+    }
+
+    this.data.currentSessionId = newSessionId;
+    return true;
+  }
+
   _addClients(data_) {
     const existingKeys = sg.keyMirror(_.pluck(this.data.clients, 'clientId'));
     const data = hydrate(data_.items, 'clientId', existingKeys);
@@ -61,6 +81,16 @@ class TelemetryStore extends EventEmitter {
 
     this.data.clients = clients;
 
+    return true;
+  }
+
+  _setCurrentClient(client) {
+    const newClientId = client.clientId || client;
+    if (newClientId === this.data.currentClientId) {
+      return false;
+    }
+
+    this.data.currentClientId = newClientId;
     return true;
   }
 

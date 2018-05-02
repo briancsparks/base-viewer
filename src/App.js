@@ -24,6 +24,8 @@ class App extends Component {
     // const sessions = Array.prototype.slice.apply(telemetryStore.data.sessions);
     // const sessions = Array.prototype.slice.apply(telemetryStore.data.sessions);
 
+    const currentSessionId  = ((this.state) && this.state.currentSessionId) || '';
+
     return (
       <div className="App">
         <Navbar inverse fluid fixedTop>
@@ -36,6 +38,11 @@ class App extends Component {
             </Navbar.Brand>
             <ItemList itemType="clients"  itemKeyName="clientId" />
             <ItemList itemType="sessions" itemKeyName="sessionId" />
+
+            <Navbar.Text pullRight>
+              {`${currentSessionId}`}
+            </Navbar.Text>
+
           </Navbar.Header>
 
           <Navbar.Collapse>
@@ -59,8 +66,22 @@ class App extends Component {
   }
 
   componentDidMount() {
+    telemetryStore.addChangeListener(this._onChange.bind(this));
+    
     getSessionData();
   }
+
+  _onChange() {
+    const itemType  = this.props.itemType           || '';
+    const storeList = telemetryStore.data[itemType] || {};
+
+    const items = Array.prototype.slice.apply(storeList);
+
+    const currentSessionId = telemetryStore.data.currentSessionId;
+
+    this.setState({items, currentSessionId});
+  }
+
 }
 
 export default App;
