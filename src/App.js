@@ -7,6 +7,9 @@ import { TopTabs } from './Components/TopTabsComponent';
 
 import getSessionData       from './Drivers/GetSessionData';
 
+// TODO: remove this
+import telemetryStore       from './Stores/TelemetryStore';
+
 import './short.css'
 import './App.css';
 

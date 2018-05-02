@@ -35,6 +35,11 @@ export class Config {
 
     return url.path;
   }
+
+  getClientId() {
+    // TODO: compute from mac address or somethings
+    return 'asdf';
+  }
 }
 
 export let config = new Config();

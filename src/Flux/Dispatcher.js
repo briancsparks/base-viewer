@@ -1,6 +1,6 @@
 
 
-const FluxDispatcher          = require('flux');
+const FluxDispatcher          = require('flux').Dispatcher;
 const Dispatcher              = new FluxDispatcher();
 
 Dispatcher.handleAction = function(action) {
@@ -10,3 +10,4 @@ Dispatcher.handleAction = function(action) {
   });
 };
 
+module.exports = Dispatcher;
