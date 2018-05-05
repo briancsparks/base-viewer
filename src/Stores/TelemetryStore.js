@@ -2,7 +2,7 @@
 import Dispatcher             from '../Flux/Dispatcher';
 import { EventEmitter }       from 'fbemitter';
 import { Actions }            from '../Actions/Actions';
-import { TimeSeries }         from 'pondjs';
+// import { TimeSeries }         from 'pondjs';
 import { _ }                  from 'underscore';
 
 const sg                      = require('sgsg/lite');
@@ -47,10 +47,10 @@ class TelemetryStore extends EventEmitter {
       break;
     }
 
-    var report = _.pick(this.data, 'currentSessionId', 'currentClientId');
-    report.sessions = (sg.deref(this, ['data', 'sessions'])) || 0;
-    report.clients  = (sg.deref(this, ['data', 'clients'])) || 0;
-    console.log(report);
+    // var report = _.pick(this.data, 'currentSessionId', 'currentClientId');
+    // report.sessions = (sg.deref(this, ['data', 'sessions'])) || 0;
+    // report.clients  = (sg.deref(this, ['data', 'clients'])) || 0;
+    // console.log(report);
 
     if (didChange) {
       this.emit('change');

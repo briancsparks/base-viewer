@@ -25,6 +25,8 @@ class App extends Component {
     // const sessions = Array.prototype.slice.apply(telemetryStore.data.sessions);
 
     const currentSessionId  = ((this.state) && this.state.currentSessionId) || '';
+    const sessionsCount     = ((this.state) && this.state.sessionsCount)    || 0;
+    const clientsCount      = ((this.state) && this.state.clientsCount)     || 0;
 
     return (
       <div className="App">
@@ -36,6 +38,10 @@ class App extends Component {
               <a href="/">Netlab Telemetry Viewer</a>
 
             </Navbar.Brand>
+            <Navbar.Text>
+              {`${clientsCount} / ${sessionsCount}`}
+            </Navbar.Text>
+
             <ItemList itemType="clients"  itemKeyName="clientId" />
             <ItemList itemType="sessions" itemKeyName="sessionId" />
 
@@ -79,7 +85,10 @@ class App extends Component {
 
     const currentSessionId = telemetryStore.data.currentSessionId;
 
-    this.setState({items, currentSessionId});
+    const sessionsCount = telemetryStore.data.sessions.length;
+    const clientsCount  = telemetryStore.data.clients.length;
+
+    this.setState({items, currentSessionId, sessionsCount, clientsCount});
   }
 
 }

@@ -42,15 +42,15 @@ export function setCurrentSession(sessionData) {
     data          : sessionId
   });
 
-  // // Now, send a query request to the server, so it will send that
-  // // sessions data.
-  // const queryEndpoint = config.urlFor('query',
-  //     `download2?sessionId=${sessionId}&destKey=${config.getClientId()}&requestId=${sessionInfoRequestId}&dataType=telemetry&asTimeSeries=1`, true);
+  // Now, send a query request to the server, so it will send that
+  // sessions data.
+  const queryEndpoint = config.urlFor('query',
+      `download2?sessionId=${sessionId}&destKey=${config.getClientId()}&requestId=${sessionInfoRequestId}&dataType=telemetry&asTimeSeries=1`, true);
 
       
-  // return request.get(queryEndpoint).end(function(err, res) {
-  //   //console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
-  // });
+  return request.get(queryEndpoint).end(function(err, res) {
+    //console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
+  });
 };
 
 export function setCurrentClient(clientData) {

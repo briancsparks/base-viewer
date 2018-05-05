@@ -67,15 +67,18 @@ export function attachToFeed() {
 function crackPayload(payload_) {
   var payload = payload_ || {};
   var itemCount = 0;
+  var prefix = '';
 
   // The first layer should be our clientId
   if (payload[config.getClientId()]) {
     payload = payload[config.getClientId()];
+    prefix = `${prefix}${config.getClientId()}.`;
   }
 
   // Next is the requestId, if any
   if (payload[dataBootstrap]) {
     payload = payload[dataBootstrap];
+    prefix = `${prefix}${dataBootstrap}.`;
 
 //  } else if () {    /* other message names here */
   }
@@ -85,6 +88,8 @@ function crackPayload(payload_) {
 
     // Count the nuber of items
     itemCount += arrayCount(aPayload) + arrayCount(aPayload.items);
+
+    console.log(`Dispatching ${prefix}${key} from server`, aPayload.items || aPayload);
       
     // We may eventually have intelligence here, but for now,
     // let the dynamic dispatcher handle it

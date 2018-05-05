@@ -5,7 +5,7 @@ import {
   MenuItem,
 }                             from 'react-bootstrap';
 import telemetryStore         from '../Stores/TelemetryStore';
-import _                      from 'underscore';
+// import _                      from 'underscore';
 import {
   setCurrentSession
 }                             from '../Actions/Actions';

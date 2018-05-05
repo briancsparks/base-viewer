@@ -15,11 +15,11 @@ const ntlColor     = 'blue';
 
 const startupConfig = {
   "upstreams": {
-    "telemetry": `http://teal-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`,
-    "attrstream": `http://teal-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`
+    "telemetry": `http://${webTierColor}-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`,
+    "attrstream": `http://${webTierColor}-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`
   },
   "preference": {},
-  "upstream": `http://teal-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`
+  "upstream": `http://${webTierColor}-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`
 };
 
 export class Config {
