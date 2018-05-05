@@ -3,7 +3,7 @@ import Dispatcher             from '../Flux/Dispatcher';
 import { EventEmitter }       from 'fbemitter';
 import {
   Actions,
-  setCurrentSession
+  // setCurrentSession
 }                             from '../Actions/Actions';
 // import { TimeSeries }         from 'pondjs';
 import { _ }                  from 'underscore';

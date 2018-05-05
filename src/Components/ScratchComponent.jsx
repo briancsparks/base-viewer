@@ -1,8 +1,9 @@
 
 import React, { Component }   from 'react';
 import telemetryStore         from '../Stores/TelemetryStore';
+import { format }             from 'd3-format';
 import {
-  TimeRange
+  TimeRange, TimeSeries
 }                             from 'pondjs';
 
 import {
@@ -10,15 +11,44 @@ import {
   ChartRow,
   ChartContainer,
   Brush,
-  YAxis,
-  LineChart,
+  YAxis, LabelAxis,
+  LineChart, ScatterChart,
   Charts,
   styler
 }                             from 'react-timeseries-charts';
+import { _ }                  from 'underscore';
 
 const sg                      = require('sgsg/lite');
 
 const initialRange = new TimeRange([75 * 60 * 1000, 125 * 60 * 1000]);
+
+const lineChartFormat     = format(".1f");
+const byteCountFormat     = format(".1f");                // eslint-disable-line no-unused-vars
+
+function defTimeSeries(name, obj) {
+  return new TimeSeries({
+    name,
+    columns : ['time', 'it'],
+    points  : [
+      [_.now(), obj]
+    ]
+  });
+}
+
+const chartStyle = {
+  borderStyle: "solid",
+  borderWidth: 1,
+  borderColor: "#DDD",
+  paddingTop: 10,
+  marginBottom: 10
+};
+
+// const brushStyle = {
+//   boxShadow: "inset 0px 2px 5px -2px rgba(189, 189, 189, 0.75)",
+//   background: "#FEFEFE",
+//   paddingTop: 10
+// };
+
 
 export class ScratchComponent extends Component {
 
@@ -29,6 +59,82 @@ export class ScratchComponent extends Component {
       brushrange  : initialRange
     };
 
+  }
+
+  renderScatterChart(eventType, deepKey, yLabel) {
+
+    const events = this.state.events;
+
+    const defDeepKey      = _.last(deepKey.split('.'));
+    const timeSeries      = events[eventType] || defTimeSeries(eventType, {[defDeepKey]:100});
+    const seriesMax       = timeSeries.max(deepKey);
+    const seriesAvg       = timeSeries.avg(deepKey);
+    const seriesMin       = Math.min(timeSeries.min(deepKey), 0);
+
+    const style = styler([                // eslint-disable-line no-unused-vars
+      { key: deepKey, color: "steelblue", width: 1, opacity: 0.5 }
+    ]);
+
+    const scatterStyle = {
+      [deepKey]: {
+        normal: {
+          fill: "steelblue",
+          opacity: 0.8,
+        },
+        highlighted: {
+          fill: "#a7c4dd",
+          opacity: 1.0,
+        },
+        selected: {
+          fill: "orange",
+          opacity: 1.0,
+        },
+        muted: {
+          fill: "grey",
+          opacity: 0.5
+        }
+      }
+    };
+
+    const seriesSummaryValues = [
+      { label: "Max", value: lineChartFormat(seriesMax) },
+      { label: "Avg", value: lineChartFormat(seriesAvg) }
+    ];
+
+    return(
+      <ChartContainer timeRange={this.state.timerange}
+        format="relative"
+        trackerPosition={this.state.tracker}
+        onTrackerChanged={this._handleTrackerChanged.bind(this)}
+        enablePanZoom
+        minTime={timeSeries.range().begin()}
+        maxTime={timeSeries.range().end()}
+        minDuration={1000 * 60 * 10}
+        onTimeRangeChanged={this._handleTimeRangeChange.bind(this)}
+        onChartResize={this._handleChartResize.bind(this)}
+      >
+
+        <ChartRow height="100" debug={false}>
+          <LabelAxis id={yLabel+"yaxis"}
+            label={yLabel}
+            values={seriesSummaryValues}
+            min={seriesMin}
+            max={seriesMax}
+            width={140}
+            type="linear"
+            format=",.1f"
+          />
+          <Charts>
+
+            <ScatterChart axis={yLabel+'yaxis'}
+              series={timeSeries}
+              columns={[deepKey]}
+              style={scatterStyle}
+            />
+          </Charts>
+        </ChartRow>
+      </ChartContainer>
+    );
   }
 
   render() {
@@ -56,6 +162,16 @@ export class ScratchComponent extends Component {
 
     return (
       <div>
+        <div className="row">
+          <div className="col-md-12" style={chartStyle}>
+            <Resizable>
+
+              {this.renderScatterChart('found_ip_mac', "it.tick", "ARP")}
+
+            </Resizable>
+          </div>
+        </div>
+
         <div className="row">
           <div className="col-md-12" style={brushStyle}>
             <Resizable>
@@ -93,6 +209,7 @@ export class ScratchComponent extends Component {
             </Resizable>
           </div>
         </div>
+
       </div>
     );
   }
@@ -112,6 +229,10 @@ export class ScratchComponent extends Component {
     } else {
       this.setState({ timerange: initialRange, brushrange: null });
     }
+  }
+
+  _handleChartResize(width) {
+    this.setState({ width });
   }
 
   _onItemChosen(eventKey, event) {
