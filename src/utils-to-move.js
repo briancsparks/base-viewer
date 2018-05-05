@@ -9,13 +9,17 @@ const urlLib                  = require('url');
 _.each(require('sgsg/flow'), (value, key) => { sg[key] = value; });
 
  // This is what the server would return
+// TODO: Fix this up for the server-side routing
+const webTierColor = 'teal';
+const ntlColor     = 'blue';
+
 const startupConfig = {
   "upstreams": {
-    "telemetry": "http://teal-b47.mobilewebassist.net/ntl/api/v1/blue",
-    "attrstream": "http://teal-b47.mobilewebassist.net/ntl/api/v1/blue"
+    "telemetry": `http://teal-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`,
+    "attrstream": `http://teal-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`
   },
   "preference": {},
-  "upstream": "http://teal-b47.mobilewebassist.net/ntl/api/v1/blue"
+  "upstream": `http://teal-b47.mobilewebassist.net/ntl/api/v1/${ntlColor}`
 };
 
 export class Config {

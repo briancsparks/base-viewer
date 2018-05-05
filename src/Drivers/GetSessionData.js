@@ -13,6 +13,7 @@ import {
 const sg                      = require('sgsg/lite');
 const _                       = require('underscore');
 
+const numSessions             = 60;
 const dataBootstrap           = 'dataBootstrap';
 
 _.each(require('sgsg/flow'), (value, key) => { sg[key] = value; });
@@ -20,7 +21,7 @@ _.each(require('sgsg/flow'), (value, key) => { sg[key] = value; });
 var dataCount = 0;
 
 export function attachToFeed() {
-  const feedEndpoint = config.urlFor('feed', `feed?clientId=${config.getClientId()}&watch=bsdf&exectJson=1`, true);
+  const feedEndpoint = config.urlFor('feed', `feed?clientId=${config.getClientId()}&asTimeSeries=1&dataType=telemetry&expectJson=1`, true);
   
   return sg.until(function(again, last, count, elapsed) {
     return sg.__run3([function(next, enext, enag, ewarn) {
@@ -37,6 +38,8 @@ export function attachToFeed() {
           return again(500);
         }
 
+        
+
         // If we got an empty response, just wait a few and try again
         if (!res.body) { return again(750); }
 
@@ -47,10 +50,9 @@ export function attachToFeed() {
 
         // We got data, dispatch it
         if (payload) {
-          crackPayload(payload);
+          dataCount += crackPayload(payload);
         }
-
-        dataCount += 2;
+        console.log(`Have ${dataCount}`);
 
         return again();
       });
@@ -64,6 +66,7 @@ export function attachToFeed() {
 
 function crackPayload(payload_) {
   var payload = payload_ || {};
+  var itemCount = 0;
 
   // The first layer should be our clientId
   if (payload[config.getClientId()]) {
@@ -79,44 +82,58 @@ function crackPayload(payload_) {
 
   // OK, we are at the real data
   _.each(payload, (aPayload, key) => {
+
+    // Count the nuber of items
+    itemCount += arrayCount(aPayload) + arrayCount(aPayload.items);
       
     // We may eventually have intelligence here, but for now,
     // let the dynamic dispatcher handle it
 
     dyamicAction(key, aPayload);
   });
+
+  return itemCount;
 }
 
-export default function getSessionData() {
 
+var numRequests = 0;
+export default function getSessionData() {
+  if (numRequests> 7) { return; }
+  
   // First, make a long-term connection to the server
   attachToFeed();
 
   // Then, let it connect; then send request to the server for data
-  const queryEndpoint = config.urlFor('query', `querySessions?destKey=asdf&requestId=${dataBootstrap}&limit=60`, true);
+  const queryEndpoint = config.urlFor('query', `querySessions?destKey=asdf&requestId=${dataBootstrap}&limit=${numSessions}&dataType=dbRecords`, true);
+
   sg.setTimeout(2200, function() {
 
     return sg.until(function(again, last, count, elapsed) {
 
       // Have we gotten any data yet?
-      if (dataCount >= 10) {
+      if (dataCount >= numSessions) {
         return last();
       }
 
       return request.get(queryEndpoint).end(function(err, res) {
+        numRequests += 1
 
         // This response doesnt matter much
         //console.log(err, res.body || res.text || 'none');
 
         // I may have  gotten a response, but what matters is that the other loop gets data
-        return again(750);
+        return again(3000);
       });
     }, function() {
       //console.log('Done driving initial fetch of data');
     });
   });
+}
 
-  
 
+function arrayCount(arr) {
+  if (!_.isArray(arr))  { return 0; }
+
+  return arr.length;
 }
 

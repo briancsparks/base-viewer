@@ -51,7 +51,7 @@ export class ItemList extends Component {
 
   _onItemChosen(eventKey, event) {
     const item = this.state.items[eventKey];
-    console.log(`onItemChosen ${eventKey}`, item);
+    // console.log(`onItemChosen ${eventKey}`, item);
     setCurrentSession(item);
   }
 
