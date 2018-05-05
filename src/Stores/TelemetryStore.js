@@ -1,11 +1,17 @@
 
 import Dispatcher             from '../Flux/Dispatcher';
 import { EventEmitter }       from 'fbemitter';
-import { Actions }            from '../Actions/Actions';
+import {
+  Actions,
+  setCurrentSession
+}                             from '../Actions/Actions';
 // import { TimeSeries }         from 'pondjs';
 import { _ }                  from 'underscore';
+import { TimeSeries } from 'pondjs/lib/entry';
 
 const sg                      = require('sgsg/lite');
+
+const magicSessionId = 'A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC-20180312124354509';
 
 class TelemetryStore extends EventEmitter {
 
@@ -13,6 +19,7 @@ class TelemetryStore extends EventEmitter {
     super();
 
     this.data = {
+      telemetry           : {},
       sessions            : [],
       clients             : [],
       currentSessionId    : '',
@@ -40,9 +47,13 @@ class TelemetryStore extends EventEmitter {
       break;
 
     case Actions.SET_CURRENT_CLIENT:
-    didChange = this._setCurrentClient(data);
-    break;
-    
+      didChange = this._setCurrentClient(data);
+      break;
+      
+    case Actions.ADD_TIMESERIES_DATA:
+      didChange = this._addTimeSeriesData(data);
+      break;
+      
     default:
       break;
     }
@@ -56,6 +67,27 @@ class TelemetryStore extends EventEmitter {
       this.emit('change');
     }
   }
+  
+  _addTimeSeriesData(data) {
+    const name      = data.timeSeries.name();
+    const sessionId = data.sessionId || 'anonymous';
+
+    const ts = new TimeSeries(this._fixupTimeSeriesData(data.timeSeries));
+
+    this.data.telemetry[sessionId] = this.data.telemetry[sessionId] || {};
+    if (!this.data.telemetry[sessionId][name]) {
+      this.data.telemetry[sessionId][name] = ts;
+    } else {
+      this.data.telemetry[sessionId][name] = TimeSeries.timeSeriesListMerge({name, seriesList: [this.data.telemetry[sessionId][name], ts]});;
+    }
+
+    console.log(`${name} now has ${this.data.telemetry[sessionId][name].size()} items in the DB`);
+    return true;
+  }
+
+  _fixupTimeSeriesData(ts) {
+    return ts;
+  }
 
   _addSessions(data_) {
     const existingKeys = sg.keyMirror(_.pluck(this.data.sessions, 'sessionId'));
@@ -63,6 +95,14 @@ class TelemetryStore extends EventEmitter {
     const sessions = _.sortBy([...this.data.sessions, ...data], 'ctime');
 
     this.data.sessions = sessions;
+
+    const newKeys = sg.keyMirror(_.pluck(sessions, 'sessionId'));
+    if (newKeys[magicSessionId]) {
+      sg.setTimeout(500, function() {
+        // setCurrentSession(magicSessionId);
+      });
+    }
+
 
     return true;
   }

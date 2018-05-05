@@ -7,12 +7,22 @@ import { config }             from '../utils-to-move';
 
 const sg                      = require('sgsg/lite');
 
-const Actions = sg.keyMirror([
+export const Actions = sg.keyMirror([
   'ADD_SESSIONS', 'SET_CURRENT_SESSION',
-  'ADD_CLIENTS',  'SET_CURRENT_CLIENT'
+  'ADD_CLIENTS',  'SET_CURRENT_CLIENT',
+  'ADD_TIMESERIES_DATA'
 ]);
 
 export const sessionInfoRequestId = 'sessionInfoRequestId';
+
+export function addTimeSeriesData(data) {
+  if (!data) { return; }
+
+  Dispatcher.handleAction({
+    actionType    : Actions.ADD_TIMESERIES_DATA,
+    data          : data
+  });
+};
 
 export function addSessions(sessionData) {
   if (!sessionData) { return; }
@@ -37,20 +47,22 @@ export function setCurrentSession(sessionData) {
 
   const sessionId = sessionData.sessionId || sessionData;
 
+  // Now, send a query request to the server, so it will send that sessions data.
+  const queryEndpoint = config.urlFor('query',
+      `download2?sessionId=${sessionId}&destKey=${config.getClientId()}&requestId=${sessionInfoRequestId}&dataType=telemetry&asTimeSeries=1`, true);
+
+  
+  // Dispatch the next HXR request
+  request.get(queryEndpoint).end(function(err, res) {
+    console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
+  });
+
+  // Then, send data to the store
   Dispatcher.handleAction({
     actionType    : Actions.SET_CURRENT_SESSION,
     data          : sessionId
   });
 
-  // Now, send a query request to the server, so it will send that
-  // sessions data.
-  const queryEndpoint = config.urlFor('query',
-      `download2?sessionId=${sessionId}&destKey=${config.getClientId()}&requestId=${sessionInfoRequestId}&dataType=telemetry&asTimeSeries=1`, true);
-
-      
-  return request.get(queryEndpoint).end(function(err, res) {
-    //console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
-  });
 };
 
 export function setCurrentClient(clientData) {
@@ -78,5 +90,5 @@ export function dyamicAction(key_, data) {
   });
 };
 
-export { Actions };
+// export { Actions };
 

@@ -1,17 +1,20 @@
-import React, { Component } from 'react';
+import React, { Component }   from 'react';
 import {
   Nav, Navbar, NavItem, Grid
 }                             from 'react-bootstrap';
 import {
   ItemList
 }                             from './Components/ItemList';
+import {
+  NetworkActivity
+}                             from './Components/NetworkActivity';
 
-import { TopTabs } from './Components/TopTabsComponent';
+import { TopTabs }            from './Components/TopTabsComponent';
 
-import getSessionData       from './Drivers/GetSessionData';
+import getSessionData         from './Drivers/GetSessionData';
 
 // TODO: remove this
-import telemetryStore       from './Stores/TelemetryStore';
+import telemetryStore         from './Stores/TelemetryStore';
 
 import './short.css'
 import './App.css';
@@ -53,6 +56,7 @@ class App extends Component {
 
           <Navbar.Collapse>
             <Nav pullRight>
+              <NetworkActivity />
               <NavItem eventKey={1} href="/foobar">Foo Bar</NavItem>
             </Nav>
           </Navbar.Collapse>

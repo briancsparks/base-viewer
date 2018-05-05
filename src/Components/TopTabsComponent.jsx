@@ -4,6 +4,9 @@ import React, { Component } from 'react';
 import {
   Tabs, Tab
 }                             from 'react-bootstrap';
+import {
+  ScratchComponent
+}                             from './ScratchComponent';
 
 import '../short.css';
 
@@ -18,6 +21,8 @@ export class TopTabs extends Component {
         <Tabs id="top-tabs">
           <Tab eventKey={1} title="Scratch">
             A tab
+
+            <ScratchComponent></ScratchComponent>
           </Tab>
         </Tabs>
       </div>
