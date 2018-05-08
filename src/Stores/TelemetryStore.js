@@ -63,6 +63,14 @@ class TelemetryStore extends EventEmitter {
     // report.clients  = (sg.deref(this, ['data', 'clients'])) || 0;
     // console.log(report);
 
+    // // Show one if each of the data points, so the dev can know what to plot
+    // _.each(this.data.telemetry, (tData, sessionId) => {
+    //   const oneOfEach = sg.reduce(tData, {}, (m, v, k) => {
+    //     return sg.kv(m, k, v.atFirst().toJSON());
+    //   });
+    //   console.log(sessionId, oneOfEach);
+    // });
+
     if (didChange) {
       this.emit('change');
     }

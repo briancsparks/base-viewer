@@ -22,7 +22,7 @@ const dataBootstrap           = 'dataBootstrap';
 _.each(require('sgsg/flow'), (value, key) => { sg[key] = value; });
 
 var dataCount = 0;
-
+var feedRequestCount = 1;
 export function attachToFeed() {
   const feedEndpoint = config.urlFor('feed', `feed?clientId=${config.getClientId()}&expectJson=1`, true);
   
@@ -33,7 +33,8 @@ export function attachToFeed() {
       return sg.setTimeout(10, next);
 
     }, function(next, enext, enag, ewarn) {
-      return request.get(feedEndpoint).end(function(err, res) {
+      return request.get(feedEndpoint+`&count=${feedRequestCount}`).end(function(err, res) {
+        feedRequestCount += 1;
 
         // If there is an HTTP error, report it and try again
         if (!sg.ok(err, res)) {
