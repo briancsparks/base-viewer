@@ -187,7 +187,7 @@ export class ScratchComponent extends Component {
           <div className="col-md-12" style={chartStyle}>
             <Resizable>
 
-              {this.renderScatterCharts({yLabel:'ARP', events:[{eventType:'found_ip_mac', deepKey:"it.tick"}]})}
+              {this.renderScatterCharts({yLabel:'nn', events:[{eventType:'sentPacket', deepKey:"it.nodeNum"}]})}
 
             </Resizable>
           </div>

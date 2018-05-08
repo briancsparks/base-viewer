@@ -69,7 +69,7 @@ class TelemetryStore extends EventEmitter {
   }
   
   _addTimeSeriesData(data) {
-    const name      = data.timeSeries.name();
+    const name      = data.timeSeries.name;
     const sessionId = data.sessionId || 'anonymous';
 
     const ts = new TimeSeries(this._fixupTimeSeriesData(data.timeSeries));
@@ -86,7 +86,35 @@ class TelemetryStore extends EventEmitter {
   }
 
   _fixupTimeSeriesData(ts) {
-    return ts;
+    var result = _.omit(ts, 'points');
+
+    result.points = _.map(ts.points, (point) => {
+
+      // If we already have ip, just return it
+      if (point[1].ip) {
+        return point;
+      }
+
+      const ip = bestIp(point[1]);
+      var   ipObj = {};
+      if (ip) {
+        ipObj.ip = ip;
+      }
+      var pointData = _.extend(ipObj, point[1]); 
+      return [point[0], pointData];
+    });
+
+    // TODO: compute numBits
+    const numBits = 22;
+
+    result.points = _.map(result.points, (point) => {
+      const ip = point[1].ip;
+      if (!ip) { return point; }
+
+      return [point[0], _.extend({nodeNum:nodeNumber(ip, numBits)}, point[1])];
+    });
+
+    return result;
   }
 
   _addSessions(data_) {
@@ -184,5 +212,34 @@ function hydrate(data, keyName, existingKeys) {
       return sg.kv(m, k, value);
     })
   }
+}
+
+function bestIp(obj) {
+  if (obj.ip) {
+    return obj.ip;
+  }
+
+  return sg.reduce(obj, null, (m, v) => {
+    if (m) { return m; }
+    if (_.isString(v) && v.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)) {
+      return v;
+    }
+    return m;
+  })
+}
+
+function ipNumber(ip_) {
+  const ip = ip_.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (!ip)  { return 0; }
+
+  return (+ip[1]<<24) + (+ip[2]<<16) + (+ip[3]<<8) + (+ip[4]);
+}
+
+function ipMask(maskSize) {
+  return -1 << (32 - maskSize);
+}
+
+function nodeNumber(ip, numBits) {
+  return ipNumber(ip) & ~ipMask(numBits);
 }
 

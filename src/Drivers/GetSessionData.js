@@ -12,9 +12,6 @@ import {
   sessionInfoRequestId,
   addSessions
 }                             from '../Actions/Actions';
-import {
-  TimeSeries
-}                             from 'pondjs';
 
 const sg                      = require('sgsg/lite');
 const _                       = require('underscore');
@@ -99,7 +96,7 @@ function crackPayload(payload_) {
       _.each(tsm, (ts, name) => {
         var tsItem = _.omit(aPayload, 'timeSeriesMap');
         tsItem.name = name;
-        tsItem.timeSeries = new TimeSeries(ts);
+        tsItem.timeSeries = ts;
 
         addTimeSeriesData(tsItem);
       });
