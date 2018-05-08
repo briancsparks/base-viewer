@@ -61,7 +61,13 @@ export class ScratchComponent extends Component {
 
   }
 
-  renderScatterChart(eventType, deepKey, yLabel) {
+  renderScatterCharts(chartsA, chartsB = {}) {
+
+    const yLabelA = chartsA.yLabel;
+    // const yLabelB = chartsB.yLabel;
+
+    const eventType = chartsA.events[0].eventType;
+    const deepKey   = chartsA.events[0].deepKey;
 
     const events = this.state.events;
 
@@ -101,6 +107,23 @@ export class ScratchComponent extends Component {
       { label: "Avg", value: lineChartFormat(seriesAvg) }
     ];
 
+    const oneScatterChartA = function({eventType, deepKey}) {
+
+//      const { eventType, deepKey } = chartsA.events[n];
+      const defDeepKey      = _.last(deepKey.split('.'));
+      const timeSeries      = events[eventType] || defTimeSeries(eventType, {[defDeepKey]:100});
+
+      return (
+        <ScatterChart axis={yLabelA+'yaxis'}
+          series={timeSeries}
+          columns={[deepKey]}
+          style={scatterStyle}
+        />
+      );
+    }
+
+
+
     return(
       <ChartContainer timeRange={this.state.timerange}
         format="relative"
@@ -115,8 +138,8 @@ export class ScratchComponent extends Component {
       >
 
         <ChartRow height="100" debug={false}>
-          <LabelAxis id={yLabel+"yaxis"}
-            label={yLabel}
+          <LabelAxis id={yLabelA+"yaxis"}
+            label={yLabelA}
             values={seriesSummaryValues}
             min={seriesMin}
             max={seriesMax}
@@ -126,11 +149,9 @@ export class ScratchComponent extends Component {
           />
           <Charts>
 
-            <ScatterChart axis={yLabel+'yaxis'}
-              series={timeSeries}
-              columns={[deepKey]}
-              style={scatterStyle}
-            />
+            {_.map(chartsA.events, (event) => {
+              return oneScatterChartA(event)
+            })}
           </Charts>
         </ChartRow>
       </ChartContainer>
@@ -166,7 +187,7 @@ export class ScratchComponent extends Component {
           <div className="col-md-12" style={chartStyle}>
             <Resizable>
 
-              {this.renderScatterChart('found_ip_mac', "it.tick", "ARP")}
+              {this.renderScatterCharts({yLabel:'ARP', events:[{eventType:'found_ip_mac', deepKey:"it.tick"}]})}
 
             </Resizable>
           </div>
