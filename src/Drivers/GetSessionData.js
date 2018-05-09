@@ -71,58 +71,62 @@ export function attachToFeed() {
 }
 
 function crackPayload(payload_) {
-  var payload = payload_ || {};
+  var payload__ = payload_ || {};
+
+  if (!_.isArray(payload__)) {
+    return crackPayload([payload__]);
+  }
+
   var itemCount = 0;
-  var prefix = '';    // eslint-disable-line no-unused-vars
 
-  // The first layer should be our clientId
-  if (payload[config.getClientId()]) {
-    payload = payload[config.getClientId()];
-    prefix = `${prefix}${config.getClientId()}.`;
-  }
+  const payloadList = payload__;
+  _.each(payloadList, (payload) => {
+    var prefix = '';    // eslint-disable-line no-unused-vars
 
-  // Next is the requestId, if any
-  if (payload[dataBootstrap]) {
-    payload = payload[dataBootstrap];
-    prefix = `${prefix}${dataBootstrap}.`;
-
-  } else if (payload[sessionInfoRequestId]) {    /* other message names here */
-    payload = payload[sessionInfoRequestId];
-    prefix = `${prefix}${sessionInfoRequestId}.`;
-  }
-
-  // If it is raw data, the next index will be 'dataPoints'
-  if (payload.dataPoints && payload.dataPoints.items) {
-    addFeedData(payload);
-  }
-
-  // OK, we are at the real data
-  _.each(payload, (aPayload, key) => {
-
-    const tsm = aPayload.timeSeriesMap;
-    if (tsm) {
-      _.each(tsm, (ts, name) => {
-        var tsItem = _.omit(aPayload, 'timeSeriesMap');
-        tsItem.name = name;
-        tsItem.timeSeries = ts;
-
-        addTimeSeriesData(tsItem);
-      });
-
-      setCurrentSessionId(aPayload.sessionId);
-      return;
+    // Next is the requestId, if any
+    if (payload[dataBootstrap]) {
+      payload = payload[dataBootstrap];
+      prefix = `${prefix}${dataBootstrap}.`;
+  
+    } else if (payload[sessionInfoRequestId]) {    /* other message names here */
+      payload = payload[sessionInfoRequestId];
+      prefix = `${prefix}${sessionInfoRequestId}.`;
     }
-
-    // Count the nuber of items
-    itemCount += arrayCount(aPayload) + arrayCount(aPayload.items);
-
-    // console.log(`Dispatching ${prefix}${key} from server`, aPayload.items || aPayload);
-      
-    // We may eventually have intelligence here, but for now,
-    // let the dynamic dispatcher handle it
-
-    dyamicAction(key, aPayload);
+  
+    // If it is raw data, the next index will be 'dataPoints'
+    if (payload.dataPoints && payload.dataPoints.items) {
+      addFeedData(payload);
+    }
+  
+    // OK, we are at the real data
+    _.each(payload, (aPayload, key) => {
+  
+      const tsm = aPayload.timeSeriesMap;
+      if (tsm) {
+        _.each(tsm, (ts, name) => {
+          var tsItem = _.omit(aPayload, 'timeSeriesMap');
+          tsItem.name = name;
+          tsItem.timeSeries = ts;
+  
+          addTimeSeriesData(tsItem);
+        });
+  
+        setCurrentSessionId(aPayload.sessionId);
+        return;
+      }
+  
+      // Count the nuber of items
+      itemCount += arrayCount(aPayload) + arrayCount(aPayload.items);
+  
+      // console.log(`Dispatching ${prefix}${key} from server`, aPayload.items || aPayload);
+        
+      // We may eventually have intelligence here, but for now,
+      // let the dynamic dispatcher handle it
+  
+      dyamicAction(key, aPayload);
+    });
   });
+
 
   return itemCount;
 }
