@@ -265,7 +265,7 @@ export class ScratchComponent extends Component {
   }
 
   _onChange() {
-    const sessionId = sg.firstKey(telemetryStore.data.telemetry);
+    const sessionId = telemetryStore.data.currentSessionId || sg.firstKey(telemetryStore.data.telemetry);
 
     if (sessionId) {
       const events = telemetryStore.data.telemetry[sessionId];

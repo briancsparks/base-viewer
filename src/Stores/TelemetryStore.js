@@ -54,6 +54,10 @@ class TelemetryStore extends EventEmitter {
       didChange = this._addTimeSeriesData(data);
       break;
 
+    case Actions.ADD_FEED_DATA:
+      didChange = this._addFeedData(data);
+      break;
+
     case Actions.SHOW_DATA_TYPES_IN_CONSOLE:
       this._showDataTypesInConsole();
       break;
@@ -88,6 +92,70 @@ class TelemetryStore extends EventEmitter {
 
     // console.log(`${name} now has ${this.data.telemetry[sessionId][name].size()} items in the DB`);
     return true;
+  }
+
+  // feed data will be like:
+  // {
+  //       "dataPoints": {
+  //         "x_real_ip": "76.88.97.224",
+  //         "clientId": "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC",
+  //         "sessionId": "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC-20180508185955618",
+  //         "projectId": "ntl",
+  //         "partnerId": "HP_NTL_SERVICE",
+  //         "username": "bcs",
+  //         "version": 1,
+  //         "tick0": 1525831196999.9011,
+  //         "dataType": "telemetry",
+  //         "items": [
+  //           {
+  //             "mod": "controller",
+  //             "eventType": "mwpUp",
+  //             "loopNum": 15,
+  //             "startTick": 1001,
+  //             "module": "controller",
+  //             "tick": 1004
+  //           },
+  //           {
+  //             "mod": "mwp_udp",
+  //             "eventType": "sentPacket",
+  //             "ip": "192.168.1.3",
+  //             "port": 161,
+  //             "bytes": 48,
+  //             "module": "mwp_udp",
+  //             "tick": 1005
+  //           }
+  //         ]
+  //       }
+  // }
+
+  _addFeedData(payload) {
+    var changed = false;
+
+    const dataPoints = payload.dataPoints;
+    const obj = _.omit(dataPoints, 'items', 'payload');
+
+    var items = dataPoints.items || dataPoints.payload || [];
+    items = _.map(items, (event) => {
+      return sg.kv(event, 'eventTypeKey', cleanKey(event.eventType));
+    });
+
+    items = _.groupBy(items, 'eventTypeKey');
+
+    _.each(items, (events_, name) => {
+      var events  = _.map(events_, event => _.omit(event, 'eventTypeKey'));
+      events      = _.groupBy(events, 'tick');
+      const points = sg.reduce(events, [], (m, eventList, tick) => {
+        const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
+        return sg.ap(m, [tick, itemAtTick]);
+      });
+
+      const timeSeries = {name, columns:['time', 'it'], points, utc:true};
+      changed = this._addTimeSeriesData(_.extend({timeSeries}, obj)) || changed;
+    });
+
+    this._setCurrentSession(dataPoints.sessionId);
+
+    return changed;
   }
 
   _fixupTimeSeriesData(ts) {
@@ -263,5 +331,11 @@ function ipMask(maskSize) {
 
 function nodeNumber(ip, numBits) {
   return ipNumber(ip) & ~ipMask(numBits);
+}
+
+function cleanKey(key) {
+  if (sg.isnt(key))   { return key; }
+
+  return key.replace(/[^a-zA-Z0-9_]/ig, '_');
 }
 

@@ -10,7 +10,8 @@ const sg                      = require('sgsg/lite');
 export const Actions = sg.keyMirror([
   'ADD_SESSIONS', 'SET_CURRENT_SESSION',
   'ADD_CLIENTS',  'SET_CURRENT_CLIENT',
-  'ADD_TIMESERIES_DATA', 'SHOW_DATA_TYPES_IN_CONSOLE'
+  'ADD_TIMESERIES_DATA', 'ADD_FEED_DATA',
+  'SHOW_DATA_TYPES_IN_CONSOLE'
 ]);
 
 export const sessionInfoRequestId = 'sessionInfoRequestId';
@@ -20,6 +21,15 @@ export function addTimeSeriesData(data) {
 
   Dispatcher.handleAction({
     actionType    : Actions.ADD_TIMESERIES_DATA,
+    data          : data
+  });
+};
+
+export function addFeedData(data) {
+  if (!data) { return; }
+
+  Dispatcher.handleAction({
+    actionType    : Actions.ADD_FEED_DATA,
     data          : data
   });
 };
@@ -56,6 +66,19 @@ export function setCurrentSession(sessionData) {
   request.get(queryEndpoint).end(function(err, res) {
     // console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
   });
+
+  // Then, send data to the store
+  Dispatcher.handleAction({
+    actionType    : Actions.SET_CURRENT_SESSION,
+    data          : sessionId
+  });
+
+};
+
+export function setCurrentSessionId(sessionData) {
+  if (!sessionData) { return; }
+
+  const sessionId = sessionData.sessionId || sessionData;
 
   // Then, send data to the store
   Dispatcher.handleAction({

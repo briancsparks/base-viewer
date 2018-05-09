@@ -8,9 +8,11 @@ import {
   // addSessions,
   // addClients,
   addTimeSeriesData,
+  addFeedData,
   dyamicAction,
   sessionInfoRequestId,
-  addSessions
+  addSessions,
+  setCurrentSessionId
 }                             from '../Actions/Actions';
 
 const sg                      = require('sgsg/lite');
@@ -89,6 +91,11 @@ function crackPayload(payload_) {
     prefix = `${prefix}${sessionInfoRequestId}.`;
   }
 
+  // If it is raw data, the next index will be 'dataPoints'
+  if (payload.dataPoints && payload.dataPoints.items) {
+    addFeedData(payload);
+  }
+
   // OK, we are at the real data
   _.each(payload, (aPayload, key) => {
 
@@ -102,6 +109,7 @@ function crackPayload(payload_) {
         addTimeSeriesData(tsItem);
       });
 
+      setCurrentSessionId(aPayload.sessionId);
       return;
     }
 
@@ -119,12 +127,17 @@ function crackPayload(payload_) {
   return itemCount;
 }
 
-const nexus6 ={
+const goodSamples = [{
   "sessionId" : "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC-20180312124354509",
   "ctime" : new Date(),
   "mtime" : new Date(),
   "clientId" : "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC"
-};
+}, {
+  "sessionId" : "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC-20180508184651460",
+  "ctime" : new Date(),
+  "mtime" : new Date(),
+  "clientId" : "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC"
+}];
 
 var numRequests = 0;
 export default function getSessionData() {
@@ -133,7 +146,7 @@ export default function getSessionData() {
   // First, make a long-term connection to the server
   attachToFeed();
 
-  addSessions({items:[nexus6]});
+  addSessions({items:goodSamples});
 
   // Then, let it connect; then send request to the server for data
   const queryEndpoint = config.urlFor('query', `querySessions?destKey=asdf&requestId=${dataBootstrap}&limit=${numSessions}&dataType=dbRecords`, true);
