@@ -20,6 +20,8 @@ import { _ }                  from 'underscore';
 
 const sg                      = require('sgsg/lite');
 
+const styleColors = 'steelblue,red,teal,orange'.split(',');
+
 const initialRange = new TimeRange([75 * 60 * 1000, 125 * 60 * 1000]);
 
 const lineChartFormat     = format(".1f");
@@ -113,11 +115,13 @@ export class ScratchComponent extends Component {
       const defDeepKey      = _.last(deepKey.split('.'));
       const timeSeries      = events[eventType] || defTimeSeries(eventType, {[defDeepKey]:100});
 
+      const myStyle = _.extend({}, scatterStyle, {[deepKey] : {normal:{fill: styleColors[n], opacity: 0.8}}});
+
       return (
         <ScatterChart axis={yLabelA+'yaxis'} key={n}
           series={timeSeries}
           columns={[deepKey]}
-          style={scatterStyle}
+          style={myStyle}
         />
       );
     }
@@ -137,7 +141,7 @@ export class ScratchComponent extends Component {
         onChartResize={this._handleChartResize.bind(this)}
       >
 
-        <ChartRow height="100" debug={false}>
+        <ChartRow height="200" debug={false}>
           <LabelAxis id={yLabelA+"yaxis"}
             label={yLabelA}
             values={seriesSummaryValues}
@@ -188,6 +192,22 @@ export class ScratchComponent extends Component {
 
     return (
       <div>
+
+        <div className="row">
+          <div className="col-md-12" style={chartStyle}>
+            <Resizable>
+
+              {this.renderScatterCharts(brushrange, {
+                yLabel : 'nn', events:[
+                    {eventType:'snmp_found_printer_MDL', deepKey:"it.nodeNum"},
+                    {eventType:'snmpblaster_found_printer_MDL', deepKey:"it.nodeNum"}
+                ]
+              })}
+
+            </Resizable>
+          </div>
+        </div>
+
         <div className="row">
           <div className="col-md-12" style={chartStyle}>
             <Resizable>

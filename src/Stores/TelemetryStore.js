@@ -129,6 +129,7 @@ class TelemetryStore extends EventEmitter {
   // }
 
   _addFeedData(payload) {
+    const self = this;
     var changed = false;
 
     const dataPoints = payload.dataPoints || payload;
@@ -141,16 +142,27 @@ class TelemetryStore extends EventEmitter {
 
     items = _.groupBy(items, 'eventTypeKey');
 
-    _.each(items, (events_, name) => {
-      var events  = _.map(events_, event => _.omit(event, 'eventTypeKey'));
-      events      = _.groupBy(events, 'tick');
-      const points = sg.reduce(events, [], (m, eventList, tick) => {
-        const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
-        return sg.ap(m, [tick, itemAtTick]);
+    _.each(items, (events_, name_) => {
+
+      one(name_, events_);
+
+      const byWho = _.omit(_.groupBy(events_, 'who'), 'undefined');
+      _.each(byWho, (eventList, who) => {
+        one(`${who.replace(/[^a-z0-9]/i,'')}_${name_}`, eventList);
       });
 
-      const timeSeries = {name, columns:['time', 'it'], points, utc:true};
-      changed = this._addTimeSeriesData(_.extend({timeSeries}, obj)) || changed;
+      function one(name, events_) {
+        var events  = _.map(events_, event => _.omit(event, 'eventTypeKey'));
+        events      = _.groupBy(events, 'tick');
+        const points = sg.reduce(events, [], (m, eventList, tick) => {
+          const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
+          return sg.ap(m, [tick, itemAtTick]);
+        });
+  
+        const timeSeries = {name, columns:['time', 'it'], points, utc:true};
+        changed = self._addTimeSeriesData(_.extend({timeSeries}, obj)) || changed;
+
+      }
     });
 
     this._setCurrentSession(dataPoints.sessionId);
@@ -161,24 +173,29 @@ class TelemetryStore extends EventEmitter {
   _fixupTimeSeriesData(ts) {
     var result = _.omit(ts, 'points');
 
+    var randomIp;
     result.points = _.map(ts.points, (point) => {
 
       // If we already have ip, just return it
       if (point[1].ip) {
+        randomIp = point[1].ip;
         return point;
       }
 
       const ip = bestIp(point[1]);
       var   ipObj = {};
       if (ip) {
-        ipObj.ip = ip;
+        ipObj.ip = randomIp = ip;
       }
       var pointData = _.extend(ipObj, point[1]); 
       return [point[0], pointData];
     });
 
     // TODO: compute numBits
-    const numBits = 22;
+    var numBits = 24;             /* 192.168... */
+    if (randomIp && !randomIp.startsWith('192.168')) {
+      numBits = 21;
+    }
 
     result.points = _.map(result.points, (point) => {
       const ip = point[1].ip;
