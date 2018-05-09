@@ -126,7 +126,7 @@ export class ScratchComponent extends Component {
       );
     }
 
-    console.log(`rendering scatter with timerange:`, timerange.toJSON());
+    // console.log(`rendering scatter with timerange:`, timerange.toJSON());
 
     return(
       <ChartContainer timeRange={timerange}
@@ -141,7 +141,7 @@ export class ScratchComponent extends Component {
         onChartResize={this._handleChartResize.bind(this)}
       >
 
-        <ChartRow height="200" debug={false}>
+        <ChartRow height="140" debug={false}>
           <LabelAxis id={yLabelA+"yaxis"}
             label={yLabelA}
             values={seriesSummaryValues}

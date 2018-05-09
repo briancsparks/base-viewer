@@ -81,7 +81,7 @@ class TelemetryStore extends EventEmitter {
     const name      = data.timeSeries.name;
     const sessionId = data.sessionId || 'anonymous';
 
-    const ts = new TimeSeries(this._fixupTimeSeriesData(data.timeSeries));
+    const ts = new TimeSeries(data.timeSeries);
 
     this.data.telemetry[sessionId] = this.data.telemetry[sessionId] || {};
     if (!this.data.telemetry[sessionId][name]) {
@@ -128,83 +128,89 @@ class TelemetryStore extends EventEmitter {
   //       }
   // }
 
+
   _addFeedData(payload) {
     const self = this;
     var changed = false;
 
-    const dataPoints = payload.dataPoints || payload;
-    const obj = _.omit(dataPoints, 'items', 'payload');
+    // --------------------------------------------------------------------
+    // The payload is raw data, just like when it is uploaded (See above)
+    //
+    //  * We do various things to clean and enhance it:
+    //    1. Use the eventType property to group all of the same events together
+    //    2. Find any IP address on each event, and computing the node number
+    //
+
+    var   numBits;
+    const dataPoints  = payload.dataPoints || payload;
+    const obj         = _.omit(dataPoints, 'items', 'payload');
+    var   tick0       = dataPoints.tick0 || 0;
+
+    // If you want real dates (you dont), comment this out
+    tick0 = 0;
 
     var items = dataPoints.items || dataPoints.payload || [];
     items = _.map(items, (event) => {
-      return sg.kv(event, 'eventTypeKey', cleanKey(event.eventType));
+      var result = sg.kv(event, 'eventTypeKey', cleanKey(event.eventType));
+
+      result = sg.kv(result, 'ip', bestIp(event));
+      if (result.ip) {
+        numBits = numBits || computeNumBits(result.ip);
+        result.nodeNum = nodeNumber(result.ip, numBits);
+      }
+
+      return result;
     });
 
+    // --------------------------------------------------------------------
+    // We are starting the process of putting the data into the format that
+    // pond.js and TimeSeries charts needs.
+    //
+
+    // Group all the events by type
     items = _.groupBy(items, 'eventTypeKey');
 
+    // Loop over each event type; we will push each type group into the db one-by-one
     _.each(items, (events_, name_) => {
 
+      // `one` is a function below. Call it on the data that was passed in
       one(name_, events_);
 
-      const byWho = _.omit(_.groupBy(events_, 'who'), 'undefined');
+      // Now, if this event is claimed by someone (a `who`), give each who a group
+      // in the db
+      var   byWho = _.omit(_.groupBy(events_, 'who'), 'undefined');
+
+      // Get consistent order
+      byWho = _.extend({snmp:byWho.snmp, snmp_blaster:byWho.snmp_blaster}, _.omit(byWho, 'snmp', 'snmp_blaster'));
+
+      // Loop over each `who` and push their group into the db
       _.each(byWho, (eventList, who) => {
         one(`${who.replace(/[^a-z0-9]/i,'')}_${name_}`, eventList);
       });
 
+      // The helper funciton to push one group into the db
       function one(name, events_) {
+
+        // Remove redundant attributes, and collect all data from the same tick together
         var events  = _.map(events_, event => _.omit(event, 'eventTypeKey'));
         events      = _.groupBy(events, 'tick');
+
+        // Build up a `points` object, for ingestion by a TimeSeries
         const points = sg.reduce(events, [], (m, eventList, tick) => {
           const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
-          return sg.ap(m, [tick, itemAtTick]);
+          return sg.ap(m, [+tick + tick0, itemAtTick]);
         });
   
+        // The format for TimeSeries, but just data
         const timeSeries = {name, columns:['time', 'it'], points, utc:true};
         changed = self._addTimeSeriesData(_.extend({timeSeries}, obj)) || changed;
-
       }
     });
 
+    // Register this sessionId as the current one.
     this._setCurrentSession(dataPoints.sessionId);
 
     return changed;
-  }
-
-  _fixupTimeSeriesData(ts) {
-    var result = _.omit(ts, 'points');
-
-    var randomIp;
-    result.points = _.map(ts.points, (point) => {
-
-      // If we already have ip, just return it
-      if (point[1].ip) {
-        randomIp = point[1].ip;
-        return point;
-      }
-
-      const ip = bestIp(point[1]);
-      var   ipObj = {};
-      if (ip) {
-        ipObj.ip = randomIp = ip;
-      }
-      var pointData = _.extend(ipObj, point[1]); 
-      return [point[0], pointData];
-    });
-
-    // TODO: compute numBits
-    var numBits = 24;             /* 192.168... */
-    if (randomIp && !randomIp.startsWith('192.168')) {
-      numBits = 21;
-    }
-
-    result.points = _.map(result.points, (point) => {
-      const ip = point[1].ip;
-      if (!ip) { return point; }
-
-      return [point[0], _.extend({nodeNum:nodeNumber(ip, numBits)}, point[1])];
-    });
-
-    return result;
   }
 
   _addSessions(data_) {
@@ -321,20 +327,6 @@ function hydrate(data, keyName, existingKeys) {
   }
 }
 
-function bestIp(obj) {
-  if (obj.ip) {
-    return obj.ip;
-  }
-
-  return sg.reduce(obj, null, (m, v) => {
-    if (m) { return m; }
-    if (_.isString(v) && v.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)) {
-      return v;
-    }
-    return m;
-  })
-}
-
 function ipNumber(ip_) {
   const ip = ip_.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
   if (!ip)  { return 0; }
@@ -347,6 +339,8 @@ function ipMask(maskSize) {
 }
 
 function nodeNumber(ip, numBits) {
+  if (sg.isnt(ip) || sg.isnt(numBits)) { return; }
+
   return ipNumber(ip) & ~ipMask(numBits);
 }
 
@@ -354,5 +348,48 @@ function cleanKey(key) {
   if (sg.isnt(key))   { return key; }
 
   return key.replace(/[^a-zA-Z0-9_]/ig, '_');
+}
+
+function bestIp(event) {
+  if (event.ip) { return event.ip; }
+  if (event.IP) { return event.IP; }
+  if (event.Ip) { return event.Ip; }
+
+  const ip = sg.reduce(event, null, (m, v, key) => {
+    var isIpFormat = false;
+    if (_.isString(v) && v.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)) {
+      isIpFormat = true;
+    }
+
+    if (isIpFormat && key.toLowerCase().endsWith('ip')) {
+      return v;
+    }
+
+    if (m) { return m; }
+
+    if (isIpFormat) {
+      return v;
+    }
+
+    return null;
+  });
+
+  if (!ip) {
+    return /*undefined*/;
+  }
+
+  return ip;
+}
+
+function computeNumBits(sampleIp) {
+  if (sg.isnt(sampleIp))      { return sampleIp; }
+  if (!_.isString(sampleIp))  { return; }
+
+  var numBits = 24;             /* 192.168... */
+  if (sampleIp && !sampleIp.startsWith('192.168')) {
+    numBits = 21;
+  }
+
+  return numBits;
 }
 
