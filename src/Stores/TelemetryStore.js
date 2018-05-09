@@ -162,6 +162,20 @@ class TelemetryStore extends EventEmitter {
       return result;
     });
 
+    // Split all items into those that have an ip and those that do not
+    var allWithIp     = sg.deepCopy(_.filter(items, item => item.ip));
+    var allWithoutIp  = sg.deepCopy(_.filter(items, item => !item.ip));
+
+    allWithIp = _.filter(allWithIp, item => !(item.who === 'arp'));
+    allWithIp = _.filter(allWithIp, item => !(item.eventType === 'sentPacket'));
+    allWithIp = _.filter(allWithIp, item => !(item.eventType.startsWith('found_printer')));
+    console.log(`allWithIp`, allWithIp);
+    oneB('allWithIp', allWithIp);
+
+    allWithoutIp = _.filter(allWithoutIp, item => !(item.eventType === 'mwpUp'));
+    console.log(`allWithoutIp`, allWithoutIp);
+    oneB('allWithoutIp', allWithoutIp);
+
     // --------------------------------------------------------------------
     // We are starting the process of putting the data into the format that
     // pond.js and TimeSeries charts needs.
@@ -211,6 +225,24 @@ class TelemetryStore extends EventEmitter {
     this._setCurrentSession(dataPoints.sessionId);
 
     return changed;
+
+    // The helper funciton to push one group into the db
+    function oneB(name, events_) {
+
+      // Remove redundant attributes, and collect all data from the same tick together
+      var events  = _.map(events_, event => _.omit(event, 'eventTypeKey'));
+      events      = _.groupBy(events, 'tick');
+
+      // Build up a `points` object, for ingestion by a TimeSeries
+      const points = sg.reduce(events, [], (m, eventList, tick) => {
+        const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
+        return sg.ap(m, [+tick + tick0, itemAtTick]);
+      });
+
+      // The format for TimeSeries, but just data
+      const timeSeries = {name, columns:['time', 'it'], points, utc:true};
+      changed = self._addTimeSeriesData(_.extend({timeSeries}, obj)) || changed;
+    }
   }
 
   _addSessions(data_) {
@@ -269,7 +301,9 @@ class TelemetryStore extends EventEmitter {
         var value = {};
 
         value = sg.kv(value, 'count', v.count());
-        value = _.extend(value, v.atFirst().toJSON());
+        if (v.atFirst()) {
+          value = _.extend(value, v.atFirst().toJSON());
+        }
         return sg.kv(m, k, value);
       });
       console.log(sessionId, oneOfEach);
@@ -339,7 +373,7 @@ function ipMask(maskSize) {
 }
 
 function nodeNumber(ip, numBits) {
-  if (sg.isnt(ip) || sg.isnt(numBits)) { return; }
+  if (sg.isnt(ip) || sg.isnt(numBits) || !_.isString(ip)) { return; }
 
   return ipNumber(ip) & ~ipMask(numBits);
 }

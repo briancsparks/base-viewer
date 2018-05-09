@@ -19,6 +19,7 @@ import {
 import { _ }                  from 'underscore';
 
 const sg                      = require('sgsg/lite');
+const deref                   = sg.deref;
 
 const styleColors = 'steelblue,red,teal,orange'.split(',');
 
@@ -109,6 +110,8 @@ export class ScratchComponent extends Component {
       { label: "Avg", value: lineChartFormat(seriesAvg) }
     ];
 
+    const needSecondLabelAxis = ((chartsA.events.length > 1) && (chartsA.events[1].deepKey !== deepKey));
+
     const oneScatterChartA = function({eventType, deepKey}, n) {
 
 //      const { eventType, deepKey } = chartsA.events[n];
@@ -117,14 +120,59 @@ export class ScratchComponent extends Component {
 
       const myStyle = _.extend({}, scatterStyle, {[deepKey] : {normal:{fill: styleColors[n], opacity: 0.8}}});
 
+      var axisLabel = yLabelA+'yaxis';
+      if (n > 0 && needSecondLabelAxis) {
+        axisLabel += '2';
+      }
+
       return (
-        <ScatterChart axis={yLabelA+'yaxis'} key={n}
+        <ScatterChart axis={axisLabel} key={n}
           series={timeSeries}
           columns={[deepKey]}
           style={myStyle}
         />
       );
     }
+
+    const secondLabelAxis = function() {
+
+      if (chartsA.events.length <= 1) {
+        return (
+          <div />
+        )
+      }
+      const deepKey2   = chartsA.events[1].deepKey;
+      if (deepKey === deepKey2) {
+        return (
+          <div />
+        )
+      }
+
+      const eventType2 = chartsA.events[1].eventType;
+
+      const defDeepKey2      = _.last(deepKey2.split('.'));
+      const timeSeries2      = events[eventType2] || defTimeSeries(eventType2, {[defDeepKey2]:100});
+      const seriesMax2       = timeSeries2.max(deepKey2);
+      const seriesAvg2       = timeSeries2.avg(deepKey2);
+      const seriesMin2       = Math.min(timeSeries2.min(deepKey2), 0);
+
+      const seriesSummaryValues2 = [
+        { label: "Max", value: lineChartFormat(seriesMax2) },
+        { label: "Avg", value: lineChartFormat(seriesAvg2) }
+      ];
+
+      return (
+        <LabelAxis id={yLabelA+"yaxis2"}
+        label={yLabelA+" right"}
+        values={seriesSummaryValues2}
+        min={seriesMin2}
+        max={seriesMax2}
+        width={140}
+        type="linear"
+        format=",.1f" />
+      );
+    };
+
 
     // console.log(`rendering scatter with timerange:`, timerange.toJSON());
 
@@ -149,14 +197,17 @@ export class ScratchComponent extends Component {
             max={seriesMax}
             width={140}
             type="linear"
-            format=",.1f"
-          />
+            format=",.1f" />
+
           <Charts>
 
             {_.map(chartsA.events, (event, n) => {
               return oneScatterChartA(event, n)
             })}
           </Charts>
+
+          {secondLabelAxis()}
+          
         </ChartRow>
       </ChartContainer>
     );
@@ -188,10 +239,25 @@ export class ScratchComponent extends Component {
     const brushrange  = this.state.brushrange || mwpUpEvents.range();
     const timerange   = this.state.timerange  || brushrange;
 
-    console.log(`rendering:`, timerange.toJSON(), brushrange.toJSON());
+    // console.log(`rendering:`, timerange.toJSON(), brushrange.toJSON());
 
     return (
       <div>
+
+        <div className="row">
+          <div className="col-md-12" style={chartStyle}>
+            <Resizable>
+
+              {this.renderScatterCharts(brushrange, {
+                yLabel : 'ipno', events:[
+                    {eventType:'allWithIp',     deepKey:"it.nodeNum"},
+                    {eventType:'allWithoutIp',  deepKey:"it.tick"}
+                ]
+              })}
+
+            </Resizable>
+          </div>
+        </div>
 
         <div className="row">
           <div className="col-md-12" style={chartStyle}>
@@ -269,6 +335,17 @@ export class ScratchComponent extends Component {
   _handleTrackerChanged(tracker) {
     var state = {tracker};
     this.setState(state);
+
+    if (tracker) {
+      var ts;
+      if ((ts = deref(this.state, 'events.allWithIp'))) {
+        console.log(`allWithIp: `, ts.atTime(tracker).toJSON());
+      }
+  
+      if ((ts = deref(this.state, 'events.allWithoutIp'))) {
+        console.log(`allWithoutIp: `, ts.atTime(tracker).toJSON());
+      }
+    }
   }
 
   _handleTimeRangeChange(timerange) {
