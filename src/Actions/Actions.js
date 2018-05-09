@@ -10,7 +10,7 @@ const sg                      = require('sgsg/lite');
 export const Actions = sg.keyMirror([
   'ADD_SESSIONS', 'SET_CURRENT_SESSION',
   'ADD_CLIENTS',  'SET_CURRENT_CLIENT',
-  'ADD_TIMESERIES_DATA'
+  'ADD_TIMESERIES_DATA', 'SHOW_DATA_TYPES_IN_CONSOLE'
 ]);
 
 export const sessionInfoRequestId = 'sessionInfoRequestId';
@@ -54,7 +54,7 @@ export function setCurrentSession(sessionData) {
   
   // Dispatch the next HXR request
   request.get(queryEndpoint).end(function(err, res) {
-    console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
+    // console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
   });
 
   // Then, send data to the store
@@ -89,6 +89,13 @@ export function dyamicAction(key_, data) {
     data          : data
   });
 };
+
+export function showDataTypesInConsole() {
+  Dispatcher.handleAction({
+    actionType    : Actions.SHOW_DATA_TYPES_IN_CONSOLE
+  });
+};
+
 
 // export { Actions };
 

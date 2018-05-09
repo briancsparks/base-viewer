@@ -53,6 +53,10 @@ class TelemetryStore extends EventEmitter {
     case Actions.ADD_TIMESERIES_DATA:
       didChange = this._addTimeSeriesData(data);
       break;
+
+    case Actions.SHOW_DATA_TYPES_IN_CONSOLE:
+      this._showDataTypesInConsole();
+      break;
       
     default:
       break;
@@ -63,19 +67,12 @@ class TelemetryStore extends EventEmitter {
     // report.clients  = (sg.deref(this, ['data', 'clients'])) || 0;
     // console.log(report);
 
-    // // Show one if each of the data points, so the dev can know what to plot
-    // _.each(this.data.telemetry, (tData, sessionId) => {
-    //   const oneOfEach = sg.reduce(tData, {}, (m, v, k) => {
-    //     return sg.kv(m, k, v.atFirst().toJSON());
-    //   });
-    //   console.log(sessionId, oneOfEach);
-    // });
 
     if (didChange) {
       this.emit('change');
     }
   }
-  
+
   _addTimeSeriesData(data) {
     const name      = data.timeSeries.name;
     const sessionId = data.sessionId || 'anonymous';
@@ -89,7 +86,7 @@ class TelemetryStore extends EventEmitter {
       this.data.telemetry[sessionId][name] = TimeSeries.timeSeriesListMerge({name, seriesList: [this.data.telemetry[sessionId][name], ts]});;
     }
 
-    console.log(`${name} now has ${this.data.telemetry[sessionId][name].size()} items in the DB`);
+    // console.log(`${name} now has ${this.data.telemetry[sessionId][name].size()} items in the DB`);
     return true;
   }
 
@@ -172,6 +169,23 @@ class TelemetryStore extends EventEmitter {
     this.data.currentClientId = newClientId;
     return true;
   }
+
+  _showDataTypesInConsole() {
+
+    // Show one of each of the data points, so the dev can know what to plot
+    _.each(this.data.telemetry, (tData, sessionId) => {
+      const oneOfEach = sg.reduce(tData, {}, (m, v, k) => {
+        var value = {};
+
+        value = sg.kv(value, 'count', v.count());
+        value = _.extend(value, v.atFirst().toJSON());
+        return sg.kv(m, k, value);
+      });
+      console.log(sessionId, oneOfEach);
+    });
+
+  }
+  
 
 
 

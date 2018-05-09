@@ -1,6 +1,6 @@
 import React, { Component }   from 'react';
 import {
-  Nav, Navbar, NavItem, Grid
+  Nav, Navbar, NavItem, NavDropdown, Grid, MenuItem
 }                             from 'react-bootstrap';
 import {
   ItemList
@@ -10,6 +10,9 @@ import {
 }                             from './Components/NetworkActivity';
 
 import { TopTabs }            from './Components/TopTabsComponent';
+import {
+  showDataTypesInConsole
+}                             from './Actions/Actions';
 
 import getSessionData         from './Drivers/GetSessionData';
 
@@ -31,6 +34,8 @@ class App extends Component {
     const sessionsCount     = ((this.state) && this.state.sessionsCount)    || 0;
     const clientsCount      = ((this.state) && this.state.clientsCount)     || 0;
 
+    const onSelectAction    = this._onItemChosen.bind(this);
+
     return (
       <div className="App">
         <Navbar inverse fluid fixedTop>
@@ -39,25 +44,35 @@ class App extends Component {
           <Navbar.Header>
             <Navbar.Brand>
               <a href="/">Netlab Telemetry Viewer</a>
-
             </Navbar.Brand>
-            <Navbar.Text>
-              {`${clientsCount} / ${sessionsCount}`}
-            </Navbar.Text>
-
-            <ItemList itemType="clients"  itemKeyName="clientId" />
-            <ItemList itemType="sessions" itemKeyName="sessionId" />
-
-            <Navbar.Text pullRight>
-              {`${currentSessionId}`}
-            </Navbar.Text>
 
           </Navbar.Header>
 
           <Navbar.Collapse>
+
+            <Nav>
+              <NavDropdown eventKey={1} title="Actions" id="action-dropdown">
+                <MenuItem eventKey={1.1} onSelect={onSelectAction}>Show Data Types in Console</MenuItem>
+              </NavDropdown>
+
+              <NavItem>
+                <Navbar.Text>
+                  {`${clientsCount} / ${sessionsCount}`}
+                </Navbar.Text>
+              </NavItem>
+
+              <ItemList itemType="clients"  itemKeyName="clientId" />
+              <ItemList itemType="sessions" itemKeyName="sessionId" />
+
+              <NavItem>
+                <Navbar.Text pullRight>
+                  {`${currentSessionId}`}
+                </Navbar.Text>
+              </NavItem>
+            </Nav>
+
             <Nav pullRight>
               <NetworkActivity />
-              <NavItem eventKey={1} href="/foobar">Foo Bar</NavItem>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
@@ -79,6 +94,12 @@ class App extends Component {
     telemetryStore.addChangeListener(this._onChange.bind(this));
     
     getSessionData();
+  }
+
+  _onItemChosen(eventKey, event) {
+    if (eventKey === 1.1) {
+      showDataTypesInConsole();
+    }
   }
 
   _onChange() {

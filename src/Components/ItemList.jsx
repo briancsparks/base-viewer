@@ -1,7 +1,7 @@
 
 import React, { Component }   from 'react';
 import {
-  DropdownButton,
+  NavDropdown,
   MenuItem,
 }                             from 'react-bootstrap';
 import telemetryStore         from '../Stores/TelemetryStore';
@@ -30,10 +30,9 @@ export class ItemList extends Component {
     const myOnSelect  = this._onItemChosen.bind(this);
 
     return (
-      <DropdownButton
-          bsStyle={'default'}
+      <NavDropdown
           title={`${itemType}`}
-          key={1}
+          eventKey={1}
           id={`${itemType}-choice-button`}
       >
       {
@@ -41,7 +40,7 @@ export class ItemList extends Component {
           <MenuItem eventKey={i} key={i} onSelect={myOnSelect} >{item[itemKeyName]}</MenuItem>
         ))
       }
-      </DropdownButton>
+      </NavDropdown>
     );
   }
 

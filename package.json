@@ -2,7 +2,7 @@
   "name": "base-viewer",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://local-1-4.mobilewebassist.net/",
+  "proxy": "http://local40-246-141.mobilewebassist.net/",
   "dependencies": {
     "ajv": "^6.4.0",
     "bootstrap": "^3.3.7",

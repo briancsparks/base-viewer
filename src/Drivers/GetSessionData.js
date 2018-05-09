@@ -71,7 +71,7 @@ export function attachToFeed() {
 function crackPayload(payload_) {
   var payload = payload_ || {};
   var itemCount = 0;
-  var prefix = '';
+  var prefix = '';    // eslint-disable-line no-unused-vars
 
   // The first layer should be our clientId
   if (payload[config.getClientId()]) {
@@ -108,7 +108,7 @@ function crackPayload(payload_) {
     // Count the nuber of items
     itemCount += arrayCount(aPayload) + arrayCount(aPayload.items);
 
-    console.log(`Dispatching ${prefix}${key} from server`, aPayload.items || aPayload);
+    // console.log(`Dispatching ${prefix}${key} from server`, aPayload.items || aPayload);
       
     // We may eventually have intelligence here, but for now,
     // let the dynamic dispatcher handle it

@@ -56,12 +56,12 @@ export class ScratchComponent extends Component {
     super(props);
     this.state = {
       timerange   : initialRange,
-      brushrange  : initialRange
+      brushrange  : null
     };
 
   }
 
-  renderScatterCharts(chartsA, chartsB = {}) {
+  renderScatterCharts(timerange, chartsA, chartsB = {}) {
 
     const yLabelA = chartsA.yLabel;
     // const yLabelB = chartsB.yLabel;
@@ -107,14 +107,14 @@ export class ScratchComponent extends Component {
       { label: "Avg", value: lineChartFormat(seriesAvg) }
     ];
 
-    const oneScatterChartA = function({eventType, deepKey}) {
+    const oneScatterChartA = function({eventType, deepKey}, n) {
 
 //      const { eventType, deepKey } = chartsA.events[n];
       const defDeepKey      = _.last(deepKey.split('.'));
       const timeSeries      = events[eventType] || defTimeSeries(eventType, {[defDeepKey]:100});
 
       return (
-        <ScatterChart axis={yLabelA+'yaxis'}
+        <ScatterChart axis={yLabelA+'yaxis'} key={n}
           series={timeSeries}
           columns={[deepKey]}
           style={scatterStyle}
@@ -122,10 +122,10 @@ export class ScratchComponent extends Component {
       );
     }
 
-
+    console.log(`rendering scatter with timerange:`, timerange.toJSON());
 
     return(
-      <ChartContainer timeRange={this.state.timerange}
+      <ChartContainer timeRange={timerange}
         format="relative"
         trackerPosition={this.state.tracker}
         onTrackerChanged={this._handleTrackerChanged.bind(this)}
@@ -149,8 +149,8 @@ export class ScratchComponent extends Component {
           />
           <Charts>
 
-            {_.map(chartsA.events, (event) => {
-              return oneScatterChartA(event)
+            {_.map(chartsA.events, (event, n) => {
+              return oneScatterChartA(event, n)
             })}
           </Charts>
         </ChartRow>
@@ -181,13 +181,20 @@ export class ScratchComponent extends Component {
     const mwpUpEvents       = events.mwpUp;
     const loopNumMax        = mwpUpEvents ? mwpUpEvents.max('it.loopNum') : 100;
 
+    const brushrange  = this.state.brushrange || mwpUpEvents.range();
+    const timerange   = this.state.timerange  || brushrange;
+
+    console.log(`rendering:`, timerange.toJSON(), brushrange.toJSON());
+
     return (
       <div>
         <div className="row">
           <div className="col-md-12" style={chartStyle}>
             <Resizable>
 
-              {this.renderScatterCharts({yLabel:'nn', events:[{eventType:'sentPacket', deepKey:"it.nodeNum"}]})}
+              {this.renderScatterCharts(brushrange, {
+                yLabel : 'nn', events:[{eventType:'sentPacket', deepKey:"it.nodeNum"}]
+              })}
 
             </Resizable>
           </div>
@@ -203,7 +210,7 @@ export class ScratchComponent extends Component {
                 >
                 <ChartRow height="100" debug={false}>
                   <Brush
-                    timeRange={this.state.brushrange}
+                    timeRange={brushrange}
                     allowSelectionClear
                     onTimeRangeChanged={this._handleTimeRangeChange.bind(this)}
                   />
@@ -247,8 +254,6 @@ export class ScratchComponent extends Component {
   _handleTimeRangeChange(timerange) {
     if (timerange) {
       this.setState({ timerange, brushrange: timerange });
-    } else {
-      this.setState({ timerange: initialRange, brushrange: null });
     }
   }
 
