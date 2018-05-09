@@ -7,7 +7,7 @@ import {
 import telemetryStore         from '../Stores/TelemetryStore';
 // import _                      from 'underscore';
 import {
-  setCurrentSession
+  setCurrentSessionEz
 }                             from '../Actions/Actions';
 
 import '../short.css';
@@ -51,7 +51,7 @@ export class ItemList extends Component {
   _onItemChosen(eventKey, event) {
     const item = this.state.items[eventKey];
     // console.log(`onItemChosen ${eventKey}`, item);
-    setCurrentSession(item);
+    setCurrentSessionEz(item);
   }
 
   _onChange() {

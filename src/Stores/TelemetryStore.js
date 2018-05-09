@@ -131,7 +131,7 @@ class TelemetryStore extends EventEmitter {
   _addFeedData(payload) {
     var changed = false;
 
-    const dataPoints = payload.dataPoints;
+    const dataPoints = payload.dataPoints || payload;
     const obj = _.omit(dataPoints, 'items', 'payload');
 
     var items = dataPoints.items || dataPoints.payload || [];

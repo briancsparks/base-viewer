@@ -6,6 +6,7 @@ import Dispatcher             from '../Flux/Dispatcher';
 import { config }             from '../utils-to-move';
 
 const sg                      = require('sgsg/lite');
+const _                       = require('underscore');
 
 export const Actions = sg.keyMirror([
   'ADD_SESSIONS', 'SET_CURRENT_SESSION',
@@ -65,6 +66,56 @@ export function setCurrentSession(sessionData) {
   // Dispatch the next HXR request
   request.get(queryEndpoint).end(function(err, res) {
     // console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
+  });
+
+  // Then, send data to the store
+  Dispatcher.handleAction({
+    actionType    : Actions.SET_CURRENT_SESSION,
+    data          : sessionId
+  });
+
+};
+
+export function setCurrentSessionEz(sessionData) {
+  if (!sessionData) { return; }
+
+  const sessionId = sessionData.sessionId || sessionData;
+
+  // Now, send a query request to the server, so it will send that sessions data.
+  const queryEndpoint = config.urlFor('query', `getS3Keys?sessionId=${sessionId}`, true);
+
+  
+  // Dispatch the next HXR request
+  request.get(queryEndpoint).end(function(err, res) {
+    if (!sg.ok(err, res) || !res.ok) { return; }
+
+    console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
+
+    var   items = _.map(res.body.Contents, item => {
+      if (item.LastModified) {
+        item = sg.kv(item, 'LastModified', new Date(item.LastModified).getTime());
+      }
+      return item;
+    });
+
+    items = _.sortBy(items, 'LastModified');
+
+    return sg.until((again, last, count) => {
+      if (items.length === 0) { return last(); }
+
+      var item = items.shift();
+      if (!item.Key.match(/[/]telemetry[/]/)) { return again(); }
+
+      const queryEndpoint2 = config.urlFor('query', `getS3?key=${item.Key}`, true);
+      request.get(queryEndpoint2).end(function(err, res) {
+        if (!sg.ok(err, res) || !res.ok)  { return; }
+
+        addFeedData(res.body);
+        return again();
+      });
+    }, function() {
+
+    });
   });
 
   // Then, send data to the store
