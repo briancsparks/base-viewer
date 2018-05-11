@@ -76,8 +76,8 @@ export class ScratchComponent extends Component {
 
     const defDeepKey      = _.last(deepKey.split('.'));
     const timeSeries      = events[eventType] || defTimeSeries(eventType, {[defDeepKey]:100});
-    const seriesMax       = timeSeries.max(deepKey);
-    const seriesAvg       = timeSeries.avg(deepKey);
+    const seriesMax       = timeSeries.max(deepKey) || 100;
+    const seriesAvg       = timeSeries.avg(deepKey) || 50;
     const seriesMin       = Math.min(timeSeries.min(deepKey), 0);
 
     const style = styler([                // eslint-disable-line no-unused-vars
@@ -125,6 +125,8 @@ export class ScratchComponent extends Component {
         axisLabel += '2';
       }
 
+      const xs = timeSeries.toJSON();
+
       return (
         <ScatterChart axis={axisLabel} key={n}
           series={timeSeries}
@@ -152,8 +154,8 @@ export class ScratchComponent extends Component {
 
       const defDeepKey2      = _.last(deepKey2.split('.'));
       const timeSeries2      = events[eventType2] || defTimeSeries(eventType2, {[defDeepKey2]:100});
-      const seriesMax2       = timeSeries2.max(deepKey2);
-      const seriesAvg2       = timeSeries2.avg(deepKey2);
+      const seriesMax2       = timeSeries2.max(deepKey2) || 100;
+      const seriesAvg2       = timeSeries2.avg(deepKey2) || 50;
       const seriesMin2       = Math.min(timeSeries2.min(deepKey2), 0);
 
       const seriesSummaryValues2 = [
@@ -336,16 +338,16 @@ export class ScratchComponent extends Component {
     var state = {tracker};
     this.setState(state);
 
-    if (tracker) {
-      var ts;
-      if ((ts = deref(this.state, 'events.allWithIp'))) {
-        console.log(`allWithIp: `, ts.atTime(tracker).toJSON());
-      }
+    // if (tracker) {
+    //   var ts;
+    //   if ((ts = deref(this.state, 'events.allWithIp'))) {
+    //     console.log(`allWithIp: `, ts.atTime(tracker).toJSON());
+    //   }
   
-      if ((ts = deref(this.state, 'events.allWithoutIp'))) {
-        console.log(`allWithoutIp: `, ts.atTime(tracker).toJSON());
-      }
-    }
+    //   if ((ts = deref(this.state, 'events.allWithoutIp'))) {
+    //     console.log(`allWithoutIp: `, ts.atTime(tracker).toJSON());
+    //   }
+    // }
   }
 
   _handleTimeRangeChange(timerange) {

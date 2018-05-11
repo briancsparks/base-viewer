@@ -151,13 +151,19 @@ class TelemetryStore extends EventEmitter {
 
     var items = dataPoints.items || dataPoints.payload || [];
     items = _.map(items, (event) => {
-      var result = sg.kv(event, 'eventTypeKey', cleanKey(event.eventType));
+      if (!event.eventType) {
+        console.log(`event without type`, {event});
+      }
+
+      var result = _.extend({nodeNum:1, tick:1}, sg.kv(event, 'eventTypeKey', cleanKey(event.eventType)));
 
       result = sg.kv(result, 'ip', bestIp(event));
       if (result.ip) {
         numBits = numBits || computeNumBits(result.ip);
         result.nodeNum = nodeNumber(result.ip, numBits);
       }
+
+      result.nodeNum = result.nodeNum || 1;
 
       return result;
     });
@@ -166,14 +172,14 @@ class TelemetryStore extends EventEmitter {
     var allWithIp     = sg.deepCopy(_.filter(items, item => item.ip));
     var allWithoutIp  = sg.deepCopy(_.filter(items, item => !item.ip));
 
-    allWithIp = _.filter(allWithIp, item => !(item.who === 'arp'));
+    // allWithIp = _.filter(allWithIp, item => !(item.who === 'arp'));
     allWithIp = _.filter(allWithIp, item => !(item.eventType === 'sentPacket'));
-    allWithIp = _.filter(allWithIp, item => !(item.eventType.startsWith('found_printer')));
-    console.log(`allWithIp`, allWithIp);
+    allWithIp = _.filter(allWithIp, item =>  (!item.eventType || !item.eventType.startsWith('found_printer')));
+    // console.log(`allWithIpB`, allWithIp);
     oneB('allWithIp', allWithIp);
 
     allWithoutIp = _.filter(allWithoutIp, item => !(item.eventType === 'mwpUp'));
-    console.log(`allWithoutIp`, allWithoutIp);
+    // console.log(`allWithoutIpB`, allWithoutIp);
     oneB('allWithoutIp', allWithoutIp);
 
     // --------------------------------------------------------------------
