@@ -58,6 +58,8 @@ export class ScratchComponent extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      firstTick   : 0,
+      lastTick    : 1,
       timerange   : initialRange,
       brushrange  : null
     };
@@ -238,6 +240,8 @@ export class ScratchComponent extends Component {
     const mwpUpEvents       = events.mwpUp;
     const loopNumMax        = mwpUpEvents ? mwpUpEvents.max('it.loopNum') : 100;
 
+    const fullTimeRange     = new TimeRange([this.state.firstTick, this.state.lastTick]);
+
     const brushrange  = this.state.brushrange || mwpUpEvents.range();
     const timerange   = this.state.timerange  || brushrange;
 
@@ -292,7 +296,7 @@ export class ScratchComponent extends Component {
           <div className="col-md-12" style={brushStyle}>
             <Resizable>
               <ChartContainer
-                  timeRange={mwpUpEvents.range()}
+                  timeRange={fullTimeRange}
                   format="relative"
                   trackerPosition={this.state.tracker}
                 >
@@ -369,6 +373,16 @@ export class ScratchComponent extends Component {
     if (sessionId) {
       const events = telemetryStore.data.telemetry[sessionId];
       this.setState({events})
+    }
+
+    const firstTick = telemetryStore.data.firstTick;
+    if (firstTick) {
+      this.setState({firstTick});
+    }
+
+    const lastTick = telemetryStore.data.lastTick;
+    if (lastTick) {
+      this.setState({lastTick});
     }
 
   }

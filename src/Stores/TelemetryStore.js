@@ -150,12 +150,20 @@ class TelemetryStore extends EventEmitter {
     tick0 = 0;
 
     var items = dataPoints.items || dataPoints.payload || [];
+
+    // Keep track of the first and last items
+    var firstTick = this.data.firstTick || items[0].tick || 999999999;
+    var lastTick  = this.data.lastTick  || items[0].tick || 0;
+
     items = _.map(items, (event) => {
       if (!event.eventType) {
         console.log(`event without type`, {event});
       }
 
       var result = _.extend({nodeNum:1, tick:1}, sg.kv(event, 'eventTypeKey', cleanKey(event.eventType)));
+
+      firstTick = Math.min(firstTick, result.tick);
+      lastTick  = Math.max(lastTick,  result.tick);
 
       result = sg.kv(result, 'ip', bestIp(event));
       if (result.ip) {
@@ -168,7 +176,10 @@ class TelemetryStore extends EventEmitter {
       return result;
     });
 
-    // Split all items into those that have an ip and those that do not
+    this.data.firstTick = firstTick;
+    this.data.lastTick  = lastTick;
+
+  // Split all items into those that have an ip and those that do not
     var allWithIp     = sg.deepCopy(_.filter(items, item => item.ip));
     var allWithoutIp  = sg.deepCopy(_.filter(items, item => !item.ip));
 
@@ -275,7 +286,9 @@ class TelemetryStore extends EventEmitter {
       return false;
     }
 
-    this.data.currentSessionId = newSessionId;
+    this.data.currentSessionId  = newSessionId;
+    this.data.firstTick         = 9999999999;
+    this.data.lastTick          = 0;
     return true;
   }
 
@@ -432,4 +445,21 @@ function computeNumBits(sampleIp) {
 
   return numBits;
 }
+
+function _minBy(a, b, key) {
+  if (a[key] <= b[key]) {
+    return a;
+  }
+
+  return b;
+}
+
+function _maxBy(a, b, key) {
+  if (a[key] >= b[key]) {
+    return a;
+  }
+
+  return b;
+}
+
 
