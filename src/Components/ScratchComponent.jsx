@@ -67,6 +67,7 @@ export class ScratchComponent extends Component {
   }
 
   renderScatterCharts(timerange, chartsA, chartsB = {}) {
+    const self = this;
 
     const yLabelA = chartsA.yLabel;
     // const yLabelB = chartsB.yLabel;
@@ -134,6 +135,7 @@ export class ScratchComponent extends Component {
           series={timeSeries}
           columns={[deepKey]}
           style={myStyle}
+          onMouseNear={self._handleMouseNear.bind(self)}
         />
       );
     }
@@ -185,7 +187,6 @@ export class ScratchComponent extends Component {
         format="relative"
         trackerPosition={this.state.tracker}
         onTrackerChanged={this._handleTrackerChanged.bind(this)}
-        enablePanZoom
         minTime={timeSeries.range().begin()}
         maxTime={timeSeries.range().end()}
         minDuration={1000 * 60 * 10}
@@ -365,6 +366,10 @@ export class ScratchComponent extends Component {
   }
 
   _onItemChosen(eventKey, event) {
+  }
+
+  _handleMouseNear({column, event}) {
+    console.log(column, event.toJSON());
   }
 
   _onChange() {
