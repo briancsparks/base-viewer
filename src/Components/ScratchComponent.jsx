@@ -194,7 +194,7 @@ export class ScratchComponent extends Component {
         onChartResize={this._handleChartResize.bind(this)}
       >
 
-        <ChartRow height="140" debug={false}>
+        <ChartRow height="100" debug={false}>
           <LabelAxis id={yLabelA+"yaxis"}
             label={yLabelA}
             values={seriesSummaryValues}
@@ -368,7 +368,10 @@ export class ScratchComponent extends Component {
   _onItemChosen(eventKey, event) {
   }
 
-  _handleMouseNear({column, event}) {
+  _handleMouseNear(stats) {
+    if (sg.isnt(stats)) { return; }
+
+    const {column, event} = stats;
     console.log(column, event.toJSON());
   }
 

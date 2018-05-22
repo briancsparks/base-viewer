@@ -317,6 +317,8 @@ class TelemetryStore extends EventEmitter {
     // Show one of each of the data points, so the dev can know what to plot
     _.each(this.data.telemetry, (tData, sessionId) => {
       const oneOfEach = sg.reduce(tData, {}, (m, v, k) => {
+        console.log(v.toJSON());
+
         var value = {};
 
         value = sg.kv(value, 'count', v.count());
