@@ -7,10 +7,14 @@ import {
 import telemetryStore         from '../Stores/TelemetryStore';
 // import _                      from 'underscore';
 import {
-  setCurrentSessionEz
+  Actions
 }                             from '../Actions/Actions';
 
 import '../short.css';
+
+const {
+  setCurrentSessionEz
+} = Actions;
 
 
 export class ItemList extends Component {

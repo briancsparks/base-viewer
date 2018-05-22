@@ -11,7 +11,7 @@ import {
 
 import { TopTabs }            from './Components/TopTabsComponent';
 import {
-  showDataTypesInConsole
+  DebugActions
 }                             from './Actions/Actions';
 
 import getSessionData         from './Drivers/GetSessionData';
@@ -21,6 +21,11 @@ import telemetryStore         from './Stores/TelemetryStore';
 
 import './short.css'
 import './App.css';
+
+const {
+  showDataTypesInConsole
+} = DebugActions;
+
 
 class App extends Component {
 

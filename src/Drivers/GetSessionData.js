@@ -2,21 +2,36 @@
 /**
  *  Gets data from the server.
  */
+import Reflux       from 'reflux';
 import request      from 'superagent';
 import { config }   from '../utils-to-move';
 import {
+  Actions,
+  TimeSeriesActions,
   // addSessions,
   // addClients,
-  addTimeSeriesData,
-  addFeedData,
-  dyamicAction,
-  sessionInfoRequestId,
-  addSessions,
-  setCurrentSessionId
+  // dyamicAction,
+  // sessionInfoRequestId
 }                             from '../Actions/Actions';
+import RawTelemetryStore      from '../Stores/RawTelemetryStore';
+import TimeSeriesStore        from '../Stores/TimeSeriesStore';
+
+Reflux.initStore(RawTelemetryStore);
+Reflux.initStore(TimeSeriesStore);
 
 const sg                      = require('sgsg/lite');
 const _                       = require('underscore');
+
+const {
+  addTimeSeriesData,
+  addTimeSeriesFeedData,
+} = TimeSeriesActions;
+
+const {
+  addSessions,
+  addClients,
+  setCurrentSessionId
+} = Actions;
 
 const numSessions             = 10;
 const dataBootstrap           = 'dataBootstrap';
@@ -88,14 +103,14 @@ function crackPayload(payload_) {
       payload = payload[dataBootstrap];
       prefix = `${prefix}${dataBootstrap}.`;
   
-    } else if (payload[sessionInfoRequestId]) {    /* other message names here */
-      payload = payload[sessionInfoRequestId];
-      prefix = `${prefix}${sessionInfoRequestId}.`;
+    // } else if (payload[sessionInfoRequestId]) {    /* other message names here */
+    //   payload = payload[sessionInfoRequestId];
+    //   prefix = `${prefix}${sessionInfoRequestId}.`;
     }
   
     // If it is raw data, the next index will be 'dataPoints'
     if (payload.dataPoints && payload.dataPoints.items) {
-      addFeedData(payload);
+      addTimeSeriesFeedData(payload);
     }
   
     // OK, we are at the real data
@@ -123,7 +138,12 @@ function crackPayload(payload_) {
       // We may eventually have intelligence here, but for now,
       // let the dynamic dispatcher handle it
   
-      dyamicAction(key, aPayload);
+      // dyamicAction(key, aPayload);
+      if (key === 'sessions') {
+        addSessions(aPayload);
+      } else if (key === 'clients') {
+        addClients(aPayload);
+      }
     });
   });
 
