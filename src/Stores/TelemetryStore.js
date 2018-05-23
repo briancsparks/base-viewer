@@ -179,12 +179,14 @@ class TelemetryStore extends EventEmitter {
     this.data.firstTick = firstTick;
     this.data.lastTick  = lastTick;
 
-  // Split all items into those that have an ip and those that do not
+    // Split all items into those that have an ip and those that do not
     var allWithIp     = sg.deepCopy(_.filter(items, item => item.ip));
     var allWithoutIp  = sg.deepCopy(_.filter(items, item => !item.ip));
 
     // allWithIp = _.filter(allWithIp, item => !(item.who === 'arp'));
     allWithIp = _.filter(allWithIp, item => !(item.eventType === 'sentPacket'));
+    allWithIp = _.filter(allWithIp, item => !(item.eventType === 'socketAvailability'));
+    // allWithIp = _.filter(allWithIp, item => !(item.eventType === 'stallSocketWrite'));
     allWithIp = _.filter(allWithIp, item =>  (!item.eventType || !item.eventType.startsWith('found_printer')));
     // console.log(`allWithIpB`, allWithIp);
     oneB('allWithIp', allWithIp);
@@ -205,7 +207,7 @@ class TelemetryStore extends EventEmitter {
     _.each(items, (events_, name_) => {
 
       // `one` is a function below. Call it on the data that was passed in
-      one(name_, events_);
+      oneB(name_, events_);
 
       // Now, if this event is claimed by someone (a `who`), give each who a group
       // in the db
@@ -216,26 +218,8 @@ class TelemetryStore extends EventEmitter {
 
       // Loop over each `who` and push their group into the db
       _.each(byWho, (eventList, who) => {
-        one(`${who.replace(/[^a-z0-9]/i,'')}_${name_}`, eventList);
+        oneB(`${who.replace(/[^a-z0-9]/i,'')}_${name_}`, eventList);
       });
-
-      // The helper funciton to push one group into the db
-      function one(name, events_) {
-
-        // Remove redundant attributes, and collect all data from the same tick together
-        var events  = _.map(events_, event => _.omit(event, 'eventTypeKey'));
-        events      = _.groupBy(events, 'tick');
-
-        // Build up a `points` object, for ingestion by a TimeSeries
-        const points = sg.reduce(events, [], (m, eventList, tick) => {
-          const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
-          return sg.ap(m, [+tick + tick0, itemAtTick]);
-        });
-  
-        // The format for TimeSeries, but just data
-        const timeSeries = {name, columns:['time', 'it'], points, utc:true};
-        changed = self._addTimeSeriesData(_.extend({timeSeries}, obj)) || changed;
-      }
     });
 
     // Register this sessionId as the current one.
@@ -448,20 +432,20 @@ function computeNumBits(sampleIp) {
   return numBits;
 }
 
-function _minBy(a, b, key) {
-  if (a[key] <= b[key]) {
-    return a;
-  }
+// function _minBy(a, b, key) {
+//   if (a[key] <= b[key]) {
+//     return a;
+//   }
 
-  return b;
-}
+//   return b;
+// }
 
-function _maxBy(a, b, key) {
-  if (a[key] >= b[key]) {
-    return a;
-  }
+// function _maxBy(a, b, key) {
+//   if (a[key] >= b[key]) {
+//     return a;
+//   }
 
-  return b;
-}
+//   return b;
+// }
 
 
