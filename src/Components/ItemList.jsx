@@ -1,10 +1,11 @@
 
-import React, { Component }   from 'react';
+import React                  from 'react';
+import Reflux                 from 'reflux';
 import {
   NavDropdown,
   MenuItem,
 }                             from 'react-bootstrap';
-import telemetryStore         from '../Stores/TelemetryStore';
+import RawTelemetryStore      from '../Stores/RawTelemetryStore';
 // import _                      from 'underscore';
 import {
   Actions
@@ -12,24 +13,27 @@ import {
 
 import '../short.css';
 
+const sg                      = require('sgsg/lite');
+
+const deref                   = sg.deref;
+
 const {
   setCurrentSessionEz
 } = Actions;
 
 
-export class ItemList extends Component {
+export class ItemList extends Reflux.Component {
 
   constructor(props) {
     super(props);
-    this.state = {};
-
+    this.store = RawTelemetryStore;
   }
 
   render() {
 
-    const items       = this.state.items        || [];
-    const itemType    = this.props.itemType     || ''; 
-    const itemKeyName = this.props.itemKeyName  || '';
+    const itemType    = this.props.itemType          || ''; 
+    const itemKeyName = this.props.itemKeyName       || '';
+    const items       = this._getItems();
 
     const myOnSelect  = this._onItemChosen.bind(this);
 
@@ -48,19 +52,16 @@ export class ItemList extends Component {
     );
   }
 
-  componentDidMount() {
-    telemetryStore.addChangeListener(this._onChange.bind(this));
+  _getItems() {
+    const itemType    = this.props.itemType          || ''; 
+
+    return deref(this.state, itemType)  || [];
   }
 
   _onItemChosen(eventKey, event) {
-    const item = this.state.items[eventKey];
+    const item = this._getItems()[eventKey];
     // console.log(`onItemChosen ${eventKey}`, item);
     setCurrentSessionEz(item);
-  }
-
-  _onChange() {
-    const items = Array.prototype.slice.apply(telemetryStore.data[this.props.itemType]);
-    this.setState({items})
   }
 
 }

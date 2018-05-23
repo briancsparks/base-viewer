@@ -42,10 +42,15 @@ export default class TimeSeriesStore extends Reflux.Store {
     }, this);
   }
 
-  onRawTelemetryClientsChange(x) {
+  onRawTelemetrySessionsChange(x) {
     // eslint-disable-next-line no-unused-vars
     var j = 10;
   }
+
+  onRawTelemetryClientsChange(x) {
+    // eslint-disable-next-line no-unused-vars
+    var j = 10;
+  }  
 
 }
 

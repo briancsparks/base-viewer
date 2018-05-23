@@ -3,12 +3,18 @@
  *
  */
 import Reflux                 from 'reflux';
+import request                from 'superagent';
 import {
   Actions, RawTimeSeriesActions
 }                             from '../Actions/Actions';
 
+import { config }             from '../utils-to-move';
+
 import { _ }                  from 'underscore';
 
+// const {
+//   addRawTimeSeriesFeedData
+// } = RawTimeSeriesActions;
 const sg                      = require('sgsg/lite');
 
 const setOnn                  = sg.setOnn;
@@ -49,17 +55,36 @@ export default class RawTelemetryStore extends Reflux.Store {
    */
   onSetCurrentSession(session) {
 
-    const newSessionId = session.sessionId || session;
-    if (!_.isString(newSessionId)) {
-      console.error(`Trying to set the current session, need sessionId (a String), have:`, newSessionId);
-      return;
+    this.setState(this.handleSetCurrentSession(session, {}));
+
+    // const newSessionId = session.sessionId || session;
+    // if (!_.isString(newSessionId)) {
+    //   console.error(`Trying to set the current session, need sessionId (a String), have:`, newSessionId);
+    //   return;
+    // }
+
+    // if (newSessionId === this.state.currentSessionId) {
+    //   return;
+    // }
+
+    // this.setState({currentSessionId : newSessionId});
+  }
+
+  handleSetCurrentSession(session, newState = {}) {
+
+    if (!session) { return newState; }
+
+    const sessionId = session.sessionId || session;
+    if (!_.isString(sessionId)) {
+      console.error(`Trying to set the current session, need sessionId (a String), have:`, sessionId);
+      return newState;
     }
 
-    if (newSessionId === this.state.currentSessionId) {
-      return;
+    if (sessionId === this.state.currentSessionId) {
+      return newState;
     }
 
-    this.setState({currentSessionId : newSessionId});
+    return sg.kv(newState, 'sessionId', sessionId);
   }
 
   onSetCurrentClient(client) {
@@ -77,16 +102,63 @@ export default class RawTelemetryStore extends Reflux.Store {
     this.setState({currentClientId : newClientId});
   }
 
+  onSetCurrentSessionEz(sessionData) {
+    const self = this;
+
+    if (!sessionData) { return; }
+
+    const sessionId = sessionData.sessionId || sessionData;
+
+    const queryEndpoint = config.urlFor('query', `getS3Keys?sessionId=${sessionId}`, true);
+
+    // Dispatch the next HXR request
+    request.get(queryEndpoint).end(function(err, res) {
+      if (!sg.ok(err, res) || !res.ok) { return; }
+
+      console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
+
+      var   items = _.map(res.body.Contents, item => {
+        if (item.LastModified) {
+          item = sg.kv(item, 'LastModified', new Date(item.LastModified).getTime());
+        }
+        return item;
+      });
+
+      items = _.sortBy(items, 'LastModified');
+
+      return sg.until((again, last, count) => {
+        if (items.length === 0) { return last(); }
+
+        var item = items.shift();
+        if (!item.Key.match(/[/]telemetry[/]/)) { return again(); }
+
+        const queryEndpoint2 = config.urlFor('query', `getS3?key=${item.Key}`, true);
+        request.get(queryEndpoint2).end(function(err, res) {
+          if (!sg.ok(err, res) || !res.ok)  { return again(); }
+
+          console.log(`on request for ${queryEndpoint2}, got`, {err, ok:res.ok});
+          self.onAddRawTimeSeriesFeedData(res.body);
+          return again();
+        });
+      }, function() {
+
+      });
+
+    });
+
+    this.setState(this.handleSetCurrentSession(sessionId, {}));
+  }
+
   onAddRawTimeSeriesFeedData(payload) {
 
     var   numBits;
-    var   newState    = {};
     const dataPoints  = payload.dataPoints || payload;
-    // const obj         = _.omit(dataPoints, 'items', 'payload');
-    // var   tick0       = dataPoints.tick0 || 0;
+    var   tick0       = dataPoints.tick0 || 0;
+    const meta        = _.omit(dataPoints, 'items', 'payload');
+    var   newState    = {meta};
 
     // If you want real dates (you dont), comment this out
-    // tick0 = 0;
+    tick0 = 0;
 
     var items = dataPoints.items || dataPoints.payload || [];
 
@@ -94,6 +166,7 @@ export default class RawTelemetryStore extends Reflux.Store {
     newState.firstTick = this.state.firstTick || items[0].tick || 999999999;
     newState.lastTick  = this.state.lastTick  || items[0].tick || 0;
 
+    // Clean event data
     items = _.map(items, (event) => {
       if (!event.eventType) {
         console.log(`event without type`, {event});
@@ -101,7 +174,7 @@ export default class RawTelemetryStore extends Reflux.Store {
 
       var result = sg.kv(event, 'eventTypeKey', cleanKey(event.eventType));
 
-      if (result.tick) {
+      if (result.hasOwnProperty('tick')) {
         newState.firstTick = Math.min(newState.firstTick, result.tick);
         newState.lastTick  = Math.max(newState.lastTick,  result.tick);
       }
@@ -115,12 +188,38 @@ export default class RawTelemetryStore extends Reflux.Store {
       return result;
     });
 
+    items = _.groupBy(items, 'eventTypeKey');
+    
+    _.each(items, (events, name) => {
+      one(name, events);
+    });
 
+    newState = this.handleSetCurrentSession(dataPoints.sessionId, newState);
+
+    this.setState(newState);
+
+    function one(name, events_) {
+
+      // Remove redundant attributes, and collect all data from the same tick together
+      var events  = _.map(events_, event => _.omit(event, 'eventTypeKey'));
+      events      = _.groupBy(events, 'tick');
+
+      // Build up a `points` object, for ingestion by a TimeSeries
+      const points = sg.reduce(events, [], (m, eventList, tick) => {
+        const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
+        return sg.ap(m, [+tick + tick0, itemAtTick]);
+      });
+
+      // The format for TimeSeries, but just data
+      const timeSeries = {name, columns:['time', 'it'], points, utc:true};
+      newState[name] = timeSeries;
+
+    }
   }
 
   onAddRawTimeSeriesData(tsData) {
 
-  }  
+  }
 
 }
 
@@ -206,6 +305,20 @@ function nodeNumber(ip, numBits) {
   return ipNumber(ip) & ~ipMask(numBits);
 }
 
+/**
+ * Returns the String IP (converts Numbers to String representation).
+ * 
+ * @param {*} ip The input IP; already a String or a Number.
+ */
+function ipString(ip) {
+  if (sg.isnt(ip))      { return ip; }
+  if (_.isString(ip))   { return ip; }
+  if (!_.isNumber(ip))  { return /*undefined*/; }
+
+  // Assumes network byte-order
+  return `${(ip & 0xff)}.${((ip & 0xff00) >> 8) & 0xff}.${((ip & 0xff0000) >> 16) & 0xff}.${((ip & 0xff000000) >> 24) & 0xff}`;
+}
+
 // eslint-disable-next-line no-unused-vars
 function cleanKey(key) {
   if (sg.isnt(key))   { return key; }
@@ -215,9 +328,9 @@ function cleanKey(key) {
 
 // eslint-disable-next-line no-unused-vars
 function bestIp(event) {
-  if (event.ip) { return event.ip; }
-  if (event.IP) { return event.IP; }
-  if (event.Ip) { return event.Ip; }
+  if (event.ip) { return ipString(event.ip); }
+  if (event.IP) { return ipString(event.IP); }
+  if (event.Ip) { return ipString(event.Ip); }
 
   const ip = sg.reduce(event, null, (m, v, key) => {
     var isIpFormat = false;
@@ -242,7 +355,7 @@ function bestIp(event) {
     return /*undefined*/;
   }
 
-  return ip;
+  return ipString(ip);
 }
 
 // eslint-disable-next-line no-unused-vars

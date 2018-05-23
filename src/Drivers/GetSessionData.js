@@ -24,7 +24,10 @@ const _                       = require('underscore');
 
 const {
   addTimeSeriesData,
-  addTimeSeriesFeedData,
+} = TimeSeriesActions;
+
+const {
+  addRawTimeSeriesFeedData,
 } = TimeSeriesActions;
 
 const {
@@ -110,7 +113,7 @@ function crackPayload(payload_) {
   
     // If it is raw data, the next index will be 'dataPoints'
     if (payload.dataPoints && payload.dataPoints.items) {
-      addTimeSeriesFeedData(payload);
+      addRawTimeSeriesFeedData(payload);
     }
   
     // OK, we are at the real data
