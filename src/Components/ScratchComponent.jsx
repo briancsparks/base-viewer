@@ -19,7 +19,7 @@ import {
 import { _ }                  from 'underscore';
 
 const sg                      = require('sgsg/lite');
-const deref                   = sg.deref;
+// const deref                   = sg.deref;
 
 const styleColors = 'steelblue,red,teal,orange'.split(',');
 
@@ -128,7 +128,7 @@ export class ScratchComponent extends Component {
         axisLabel += '2';
       }
 
-      const xs = timeSeries.toJSON();
+      // const xs = timeSeries.toJSON();
 
       return (
         <ScatterChart axis={axisLabel} key={n}
@@ -244,7 +244,7 @@ export class ScratchComponent extends Component {
     const fullTimeRange     = new TimeRange([this.state.firstTick, this.state.lastTick]);
 
     const brushrange  = this.state.brushrange || mwpUpEvents.range();
-    const timerange   = this.state.timerange  || brushrange;
+    // const timerange   = this.state.timerange  || brushrange;
 
     // console.log(`rendering:`, timerange.toJSON(), brushrange.toJSON());
 

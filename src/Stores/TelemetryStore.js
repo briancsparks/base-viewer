@@ -430,20 +430,20 @@ function computeNumBits(sampleIp) {
   return numBits;
 }
 
-function _minBy(a, b, key) {
-  if (a[key] <= b[key]) {
-    return a;
-  }
+// function _minBy(a, b, key) {
+//   if (a[key] <= b[key]) {
+//     return a;
+//   }
 
-  return b;
-}
+//   return b;
+// }
 
-function _maxBy(a, b, key) {
-  if (a[key] >= b[key]) {
-    return a;
-  }
+// function _maxBy(a, b, key) {
+//   if (a[key] >= b[key]) {
+//     return a;
+//   }
 
-  return b;
-}
+//   return b;
+// }
 
 
