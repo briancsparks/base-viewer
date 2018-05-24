@@ -38,7 +38,7 @@ export class ItemList extends Reflux.Component {
 
     return (
       <NavDropdown
-          title={`${itemType}`}
+          title={`${itemType} (${items.length})`}
           eventKey={1}
           id={`${itemType}-choice-button`}
       >

@@ -2,7 +2,7 @@
 import React                  from 'react';
 import Reflux                 from 'reflux';
 import {
-  Nav, Navbar, NavItem, NavDropdown, Grid, MenuItem
+  Nav, Navbar, NavDropdown, Grid, MenuItem
 }                             from 'react-bootstrap';
 import {
   ItemList
@@ -40,11 +40,8 @@ class App extends Reflux.Component {
 
   render() {
 
-    const sessionId       = deref(this.state, 'sessionId')                || '';
-    const sessionsCount   = deref(this.state, 'sessions.length')          || 0;
-    const clientsCount    = deref(this.state, 'clients.length')           || 0;
-
-    const onSelectAction    = this._onItemChosen.bind(this);
+    const sessionId       = deref(this.state, 'sessionId')   || '';
+    const onSelectAction  = this._onItemChosen.bind(this);
 
     return (
       <div className="App">
@@ -65,20 +62,12 @@ class App extends Reflux.Component {
                 <MenuItem eventKey={1.1} onSelect={onSelectAction}>Show Data Types in Console</MenuItem>
               </NavDropdown>
 
-              <NavItem>
-                <Navbar.Text>
-                  {`${clientsCount} / ${sessionsCount}`}
-                </Navbar.Text>
-              </NavItem>
-
               <ItemList itemType="clients"  itemKeyName="clientId" />
               <ItemList itemType="sessions" itemKeyName="sessionId" />
 
-              <NavItem>
-                <Navbar.Text pullRight>
-                  {`${sessionId}`}
-                </Navbar.Text>
-              </NavItem>
+              <Navbar.Text pullRight>
+                {`${sessionId}`}
+              </Navbar.Text>
             </Nav>
 
             <Nav pullRight>

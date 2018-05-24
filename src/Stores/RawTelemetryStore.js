@@ -126,7 +126,14 @@ export default class RawTelemetryStore extends Reflux.Store {
 
     });
 
-    this.setState(this.handleSetCurrentSession(sessionId, {}));
+    const update = sg.reduce(this.state, {}, function(m, v, k) {
+      if (sg.isObject(v) && 'columns' in v && 'points' in v) {
+        return sg.kv(m, k, {});
+      }
+      return m;
+    });
+
+    this.setState(this.handleSetCurrentSession(sessionId, update));
   }
 
   onAddRawTimeSeriesFeedData(payload) {
@@ -184,6 +191,8 @@ export default class RawTelemetryStore extends Reflux.Store {
 
     // allWithIp = _.filter(allWithIp, item => !(item.who === 'arp'));
     allWithIp = _.filter(allWithIp, item => !(item.eventType === 'sentPacket'));
+    allWithIp = _.filter(allWithIp, item => !(item.eventType === 'socketAvailability'));
+    allWithIp = _.filter(allWithIp, item => !(item.eventType === 'stallSocketWrite'));
     allWithIp = _.filter(allWithIp, item =>  (!item.eventType || !item.eventType.startsWith('found_printer')));
     // console.log(`allWithIpB`, allWithIp);
     one('allWithIp', allWithIp);
@@ -229,7 +238,7 @@ export default class RawTelemetryStore extends Reflux.Store {
 
       const points = sg.reduce(events, [...existingPoints], (m, eventList, tick) => {
         const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
-        return sg.ap(m, [+tick + tick0, itemAtTick]);
+        return insertOrderedPoint(m, [+tick + tick0, itemAtTick]);
       });
 
       // The format for TimeSeries, but just data
@@ -241,6 +250,37 @@ export default class RawTelemetryStore extends Reflux.Store {
   onAddRawTimeSeriesData(tsData) {
   }
 }
+
+ function insertOrderedPoint(points, point) {
+
+  var   i;
+  const len = points.length;
+  
+  if (len === 0) {
+    points.push(point);
+
+  } else if (point[0] >= points[len-1][0]) {
+    // Most of the time, the new point goes on the end
+    points.push(point);
+
+  } else if (point[0] <= points[0][0]) {
+
+    points.unshift(point);
+
+  } else {
+
+    for (i = 0; i < len && point[0] >= points[i][0]; ++i) {
+      // Nothing
+    }
+
+    points.splice(i, 0, point);
+
+  }
+
+  return points;
+}
+
+
 
 /**
  * Fills out and sanitizes/fixes objects.
