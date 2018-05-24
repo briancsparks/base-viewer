@@ -106,7 +106,14 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       }
     };
 
-    const seriesSummaryValues = [
+    const infoValues = () => {
+      return [{
+        label: "Fooadfafasf",
+        value: "Barsdaafasdfs"
+      }];
+    };
+
+  const seriesSummaryValues = [
       { label: "Max", value: lineChartFormat(seriesMax) },
       { label: "Avg", value: lineChartFormat(seriesAvg) }
     ];
@@ -131,6 +138,13 @@ export class IpAcrossTimeComponent extends Reflux.Component {
           columns={[deepKey]}
           style={myStyle}
           onMouseNear={self._handleMouseNear.bind(self)}
+          info={infoValues()}
+          infoHeight={40}
+          infoWidth={110}
+          infoStyle={{
+            fill: 'black',
+            color: '#DDD'
+          }}
         />
       );
     }
@@ -186,7 +200,15 @@ export class IpAcrossTimeComponent extends Reflux.Component {
         onChartResize={this._handleChartResize.bind(this)}
       >
 
-        <ChartRow height="100" debug={false}>
+        <ChartRow height="100" debug={false}
+          trackerInfoValues={infoValues()}
+          trackerInfoHeight={40}
+          trackerInfoWidth={110}
+          trackerInfoStyle={{
+            fill: 'black',
+            color: '#DDD'
+          }}
+        >
           <LabelAxis id={yLabelA+"yaxis"}
             label={yLabelA}
             values={seriesSummaryValues}
