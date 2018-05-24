@@ -6,7 +6,6 @@ import {
   MenuItem,
 }                             from 'react-bootstrap';
 import RawTelemetryStore      from '../Stores/RawTelemetryStore';
-// import _                      from 'underscore';
 import {
   Actions
 }                             from '../Actions/Actions';
@@ -60,7 +59,6 @@ export class ItemList extends Reflux.Component {
 
   _onItemChosen(eventKey, event) {
     const item = this._getItems()[eventKey];
-    // console.log(`onItemChosen ${eventKey}`, item);
     setCurrentSessionEz(item);
   }
 

@@ -8,10 +8,6 @@ import { config }   from '../utils-to-move';
 import {
   Actions,
   TimeSeriesActions,
-  // addSessions,
-  // addClients,
-  // dyamicAction,
-  // sessionInfoRequestId
 }                             from '../Actions/Actions';
 import RawTelemetryStore      from '../Stores/RawTelemetryStore';
 import TimeSeriesStore        from '../Stores/TimeSeriesStore';

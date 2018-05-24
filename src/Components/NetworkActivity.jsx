@@ -24,17 +24,7 @@ export class NetworkActivity extends Reflux.Component {
     );
   }
 
-  // componentDidMount() {
-  //   telemetryStore.addChangeListener(this._onChange.bind(this));
-  // }
-
   _onItemChosen(eventKey, event) {
   }
-
-  // _onChange() {
-  //   const items = {};
-  //   this.setState({items})
-  // }
-
 }
 

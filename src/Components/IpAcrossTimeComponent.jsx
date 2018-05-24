@@ -18,7 +18,6 @@ import {
   styler
 }                             from 'react-timeseries-charts';
 import { _ }                  from 'underscore';
-// import RawTelemetryStore from '../Stores/RawTelemetryStore';
 
 const sg                      = require('sgsg/lite');
 const deref                   = sg.deref;
@@ -64,9 +63,7 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       brushrange  : null
     };
 
-    // this.stores = [TimeSeriesStore, RawTelemetryStore];
     this.store = TimeSeriesStore;
-
   }
 
   renderScatterCharts(timerange, chartsA, chartsB = {}) {
@@ -118,7 +115,6 @@ export class IpAcrossTimeComponent extends Reflux.Component {
 
     const oneScatterChartA = function({eventType, deepKey}, n) {
 
-//      const { eventType, deepKey } = chartsA.events[n];
       const defDeepKey      = _.last(deepKey.split('.'));
       const timeSeries      = deref(self.state, eventType) || defTimeSeries(eventType, {[defDeepKey]:100});
 
@@ -128,8 +124,6 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       if (n > 0 && needSecondLabelAxis) {
         axisLabel += '2';
       }
-
-      // const xs = timeSeries.toJSON();
 
       return (
         <ScatterChart axis={axisLabel} key={n}
@@ -180,9 +174,6 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       );
     };
 
-
-    // console.log(`rendering scatter with timerange:`, timerange.toJSON());
-
     return(
       <ChartContainer timeRange={timerange}
         format="relative"
@@ -229,8 +220,6 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       );
     }
 
-    // const sessionId       = deref(this.state, 'sessionId')  || '';
-
     const style = styler([
       { key: "it.loopNum", color: "steelblue", width: 1, opacity: 0.5 }
     ]);
@@ -241,16 +230,11 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       paddingTop: 10
     };
 
-    console.log(`mwpupevents`, {mwpUpEvents});
-
     const loopNumMax        = mwpUpEvents ? mwpUpEvents.max('it.loopNum') : 100;
 
     const fullTimeRange     = new TimeRange([this.state.firstTick, this.state.lastTick]);
 
     const brushrange  = this.state.brushrange || mwpUpEvents.range();
-    // const timerange   = this.state.timerange  || brushrange;
-
-    // console.log(`rendering:`, timerange.toJSON(), brushrange.toJSON());
 
     return (
       <div>

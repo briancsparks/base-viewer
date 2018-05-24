@@ -9,12 +9,8 @@ import {
 }                             from '../Actions/Actions';
 
 import { config }             from '../utils-to-move';
-
 import { _ }                  from 'underscore';
 
-// const {
-//   addRawTimeSeriesFeedData
-// } = RawTimeSeriesActions;
 const sg                      = require('sgsg/lite');
 
 const setOnn                  = sg.setOnn;
@@ -26,9 +22,6 @@ export default class RawTelemetryStore extends Reflux.Store {
     super();
     this.state = {};
     this.listenToMany(Actions, RawTimeSeriesActions);
-
-    // export const Actions = Reflux.createActions(['addSessions', 'addClients', 'setCurrentSession', 'setCurrentClient']);
-    // export const RawTimeSeriesActions = Reflux.createActions(['addRawTimeSeriesData', 'addRawTimeSeriesFeedData']);
   }
 
   onAddSessions(data_) {
@@ -54,20 +47,7 @@ export default class RawTelemetryStore extends Reflux.Store {
    * @param {*} session - an Object or String to indicate the sessionId of the current session
    */
   onSetCurrentSession(session) {
-
     this.setState(this.handleSetCurrentSession(session, {}));
-
-    // const newSessionId = session.sessionId || session;
-    // if (!_.isString(newSessionId)) {
-    //   console.error(`Trying to set the current session, need sessionId (a String), have:`, newSessionId);
-    //   return;
-    // }
-
-    // if (newSessionId === this.state.currentSessionId) {
-    //   return;
-    // }
-
-    // this.setState({currentSessionId : newSessionId});
   }
 
   handleSetCurrentSession(session, newState = {}) {
@@ -136,7 +116,7 @@ export default class RawTelemetryStore extends Reflux.Store {
         request.get(queryEndpoint2).end(function(err, res) {
           if (!sg.ok(err, res) || !res.ok)  { return again(); }
 
-          console.log(`on request for ${queryEndpoint2}, got`, {err, ok:res.ok});
+          // TODO: This should send an action, not make a direct call
           self.onAddRawTimeSeriesFeedData(res.body);
           return again();
         });
@@ -172,9 +152,6 @@ export default class RawTelemetryStore extends Reflux.Store {
       lastTick  : this.state.lastTick  || 0
     });
 
-    // newState.firstTick = this.state.firstTick || items[0].tick || 999999999;
-    // newState.lastTick  = this.state.lastTick  || items[0].tick || 0;
-
     // Clean event data
     items = _.map(items, (event) => {
       if (!event.eventType) {
@@ -188,9 +165,6 @@ export default class RawTelemetryStore extends Reflux.Store {
           firstTick : Math.min(newState.firstTick, result.tick),
           lastTick  : Math.max(newState.lastTick,  result.tick)
         });
-
-        // newState.firstTick = Math.min(newState.firstTick, result.tick);
-        // newState.lastTick  = Math.max(newState.lastTick,  result.tick);
       }
 
       result = sg.kv(result, 'ip', bestIp(event));
@@ -201,6 +175,8 @@ export default class RawTelemetryStore extends Reflux.Store {
 
       return result;
     });
+
+    // ----------
 
     // Split all items into those that have an ip and those that do not
     var allWithIp     = sg.deepCopy(_.filter(items, item => item.ip));
@@ -216,6 +192,7 @@ export default class RawTelemetryStore extends Reflux.Store {
     // console.log(`allWithoutIpB`, allWithoutIp);
     one('allWithoutIp', allWithoutIp);
 
+    // ----------
     items = _.groupBy(items, 'eventTypeKey');
 
     const whoCare = sg.keyMirror('snmp,snmp_blaster');
@@ -223,8 +200,8 @@ export default class RawTelemetryStore extends Reflux.Store {
     
     _.each(items, (events, name) => {
       one(name, events);
-      // Now, if this event is claimed by someone (a `who`), give each who a group
-      // in the db
+
+      // Now, if this event is claimed by someone (a `who`), give each who a group in the db
       var   byWho = _.omit(_.groupBy(events, 'who'), 'undefined');
 
       // Loop over each `who` and push their group into the db
@@ -234,8 +211,6 @@ export default class RawTelemetryStore extends Reflux.Store {
         const whoEventList = _.filter(eventList, event => eventTypeCare[event.eventType]);
         one(`${who.replace(/[^a-z0-9]/i,'')}_${name}`, whoEventList);
       });
-
-      var i = 10;
     });
 
     newState = this.handleSetCurrentSession(dataPoints.sessionId, newState);
@@ -260,16 +235,11 @@ export default class RawTelemetryStore extends Reflux.Store {
       // The format for TimeSeries, but just data
       const timeSeries = {name, columns:['time', 'it'], points, utc:true};
       newState = setOnNewState(self.state, newState, {[name] : timeSeries});
-
-      // newState[name] = timeSeries;
-
     }
   }
 
   onAddRawTimeSeriesData(tsData) {
-
   }
-
 }
 
 /**

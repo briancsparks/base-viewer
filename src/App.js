@@ -38,7 +38,6 @@ class App extends Reflux.Component {
     this.store = RawTelemetryStore;
   }
 
-
   render() {
 
     const sessionId       = deref(this.state, 'sessionId')                || '';
