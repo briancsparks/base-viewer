@@ -1,18 +1,22 @@
 
-import React, { Component } from 'react';
-// import PropTypes from 'prop-types';
+import React                  from 'react';
+import Reflux                 from 'reflux';
+import RawTelemetryStore      from '../Stores/RawTelemetryStore';
+
 import {
   Tabs, Tab
 }                             from 'react-bootstrap';
 import {
-  ScratchComponent
-}                             from './ScratchComponent';
+  IpAcrossTimeComponent
+}                             from './IpAcrossTimeComponent';
 
 import '../short.css';
 
-export class TopTabs extends Component {
-  static propTypes = {
+export class TopTabs extends Reflux.Component {
 
+  constructor(props) {
+    super(props);
+    this.store = RawTelemetryStore;
   }
 
   render() {
@@ -22,7 +26,7 @@ export class TopTabs extends Component {
           <Tab eventKey={1} title="Scratch">
             A tab
 
-            <ScratchComponent></ScratchComponent>
+            <IpAcrossTimeComponent></IpAcrossTimeComponent>
           </Tab>
         </Tabs>
       </div>

@@ -1,17 +1,17 @@
 
-import React, { Component }   from 'react';
-import telemetryStore         from '../Stores/TelemetryStore';
+import React                  from 'react';
+import Reflux                 from 'reflux';
+import RawTelemetryStore      from '../Stores/RawTelemetryStore';
 import {
   Glyphicon,
   Button
 }                             from 'react-bootstrap';
 
-export class NetworkActivity extends Component {
+export class NetworkActivity extends Reflux.Component {
 
   constructor(props) {
     super(props);
-    this.state = {};
-
+    this.store = RawTelemetryStore;
   }
 
   render() {
@@ -24,17 +24,17 @@ export class NetworkActivity extends Component {
     );
   }
 
-  componentDidMount() {
-    telemetryStore.addChangeListener(this._onChange.bind(this));
-  }
+  // componentDidMount() {
+  //   telemetryStore.addChangeListener(this._onChange.bind(this));
+  // }
 
   _onItemChosen(eventKey, event) {
   }
 
-  _onChange() {
-    const items = {};
-    this.setState({items})
-  }
+  // _onChange() {
+  //   const items = {};
+  //   this.setState({items})
+  // }
 
 }
 

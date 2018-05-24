@@ -18,7 +18,7 @@ import { _ }                  from 'underscore';
 const sg                      = require('sgsg/lite');
 
 const setOnn                  = sg.setOnn;
-// const deref                   = sg.deref;
+const deref                   = sg.deref;
 
 export default class RawTelemetryStore extends Reflux.Store {
 
@@ -150,21 +150,30 @@ export default class RawTelemetryStore extends Reflux.Store {
   }
 
   onAddRawTimeSeriesFeedData(payload) {
+    const self = this;
 
     var   numBits;
     const dataPoints  = payload.dataPoints || payload;
     var   tick0       = dataPoints.tick0 || 0;
     const meta        = _.omit(dataPoints, 'items', 'payload');
-    var   newState    = {meta};
+    var   newState    = {};
 
     // If you want real dates (you dont), comment this out
     tick0 = 0;
 
+    // Add meta
+    newState = setOnNewState(this.state, newState, {meta});
+
     var items = dataPoints.items || dataPoints.payload || [];
 
     // Keep track of the first and last items
-    newState.firstTick = this.state.firstTick || items[0].tick || 999999999;
-    newState.lastTick  = this.state.lastTick  || items[0].tick || 0;
+    newState = setOnNewState(this.state, newState, {
+      firstTick : this.state.firstTick || 999999999,
+      lastTick  : this.state.lastTick  || 0
+    });
+
+    // newState.firstTick = this.state.firstTick || items[0].tick || 999999999;
+    // newState.lastTick  = this.state.lastTick  || items[0].tick || 0;
 
     // Clean event data
     items = _.map(items, (event) => {
@@ -175,8 +184,13 @@ export default class RawTelemetryStore extends Reflux.Store {
       var result = sg.kv(event, 'eventTypeKey', cleanKey(event.eventType));
 
       if (result.hasOwnProperty('tick')) {
-        newState.firstTick = Math.min(newState.firstTick, result.tick);
-        newState.lastTick  = Math.max(newState.lastTick,  result.tick);
+        newState = setOnNewState(self.state, newState, {
+          firstTick : Math.min(newState.firstTick, result.tick),
+          lastTick  : Math.max(newState.lastTick,  result.tick)
+        });
+
+        // newState.firstTick = Math.min(newState.firstTick, result.tick);
+        // newState.lastTick  = Math.max(newState.lastTick,  result.tick);
       }
 
       result = sg.kv(result, 'ip', bestIp(event));
@@ -188,10 +202,40 @@ export default class RawTelemetryStore extends Reflux.Store {
       return result;
     });
 
+    // Split all items into those that have an ip and those that do not
+    var allWithIp     = sg.deepCopy(_.filter(items, item => item.ip));
+    var allWithoutIp  = sg.deepCopy(_.filter(items, item => !item.ip));
+
+    // allWithIp = _.filter(allWithIp, item => !(item.who === 'arp'));
+    allWithIp = _.filter(allWithIp, item => !(item.eventType === 'sentPacket'));
+    allWithIp = _.filter(allWithIp, item =>  (!item.eventType || !item.eventType.startsWith('found_printer')));
+    // console.log(`allWithIpB`, allWithIp);
+    one('allWithIp', allWithIp);
+
+    allWithoutIp = _.filter(allWithoutIp, item => !(item.eventType === 'mwpUp'));
+    // console.log(`allWithoutIpB`, allWithoutIp);
+    one('allWithoutIp', allWithoutIp);
+
     items = _.groupBy(items, 'eventTypeKey');
+
+    const whoCare = sg.keyMirror('snmp,snmp_blaster');
+    const eventTypeCare = sg.keyMirror('found_printer_MDL');
     
     _.each(items, (events, name) => {
       one(name, events);
+      // Now, if this event is claimed by someone (a `who`), give each who a group
+      // in the db
+      var   byWho = _.omit(_.groupBy(events, 'who'), 'undefined');
+
+      // Loop over each `who` and push their group into the db
+      _.each(byWho, (eventList, who) => {
+        if (!whoCare[who]) { return; }
+
+        const whoEventList = _.filter(eventList, event => eventTypeCare[event.eventType]);
+        one(`${who.replace(/[^a-z0-9]/i,'')}_${name}`, whoEventList);
+      });
+
+      var i = 10;
     });
 
     newState = this.handleSetCurrentSession(dataPoints.sessionId, newState);
@@ -199,20 +243,25 @@ export default class RawTelemetryStore extends Reflux.Store {
     this.setState(newState);
 
     function one(name, events_) {
+      if (events_.length === 0) { return; }
 
       // Remove redundant attributes, and collect all data from the same tick together
       var events  = _.map(events_, event => _.omit(event, 'eventTypeKey'));
       events      = _.groupBy(events, 'tick');
 
       // Build up a `points` object, for ingestion by a TimeSeries
-      const points = sg.reduce(events, [], (m, eventList, tick) => {
+      const existingPoints = deref(self.state, [name, 'points']) || [];
+
+      const points = sg.reduce(events, [...existingPoints], (m, eventList, tick) => {
         const itemAtTick = _.extend({}, ...eventList);                      // like doing _.extend({}, eventList[0], eventList[1]...);
         return sg.ap(m, [+tick + tick0, itemAtTick]);
       });
 
       // The format for TimeSeries, but just data
       const timeSeries = {name, columns:['time', 'it'], points, utc:true};
-      newState[name] = timeSeries;
+      newState = setOnNewState(self.state, newState, {[name] : timeSeries});
+
+      // newState[name] = timeSeries;
 
     }
   }
@@ -370,5 +419,17 @@ function computeNumBits(sampleIp) {
 
   return numBits;
 }
+
+function setOnNewState(state, newState, newNewState) {
+  const keys = _.keys(newNewState);
+
+  const result = sg.reduce(keys, newState || {}, function(m, key) {
+    // TODO: check if state[key] === newNewState[key]; if so, do not add
+    return _.extend(m, newState, sg.kv(key, newNewState[key]));
+  });
+
+  return result;
+}
+
 
 

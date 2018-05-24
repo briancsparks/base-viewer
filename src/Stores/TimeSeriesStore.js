@@ -5,6 +5,7 @@
 import Reflux                 from 'reflux';
 import { _ }                  from 'underscore';
 import RawTelemetryStore      from './RawTelemetryStore';
+import { TimeSeries }         from 'pondjs/lib/entry';
 
 // const sg                      = require('sgsg/lite');
 
@@ -20,7 +21,6 @@ export default class TimeSeriesStore extends Reflux.Store {
 
     var rawTelemetryStore = Reflux.initStore(RawTelemetryStore);
 
-    // RawTelemetryStore.listen(this.onChange.bind(this));
     this.listenTo(rawTelemetryStore, this.onRawTelemetryStoreChange.bind(this), function(state) {
        // eslint-disable-next-line no-unused-vars
       var i = 10;
@@ -36,20 +36,33 @@ export default class TimeSeriesStore extends Reflux.Store {
       if (_.isFunction(fn)) {
         fn(x);
       } else {
-        console.warn(`${fname} does not exist on TimeSeriesStore`);
+        this.onRawTelemetryOtherChange(key, value, x);
       }
-
+      
     }, this);
   }
-
+  
   onRawTelemetrySessionsChange(x) {
     // eslint-disable-next-line no-unused-vars
     var j = 10;
   }
-
+  
   onRawTelemetryClientsChange(x) {
     // eslint-disable-next-line no-unused-vars
     var j = 10;
+  }  
+  
+  onRawTelemetryOtherChange(name, data, x) {
+    
+    if (data.hasOwnProperty('columns') && data.hasOwnProperty('points')) {
+
+      // eslint-disable-next-line no-unused-vars
+      var j = 10;
+      
+      this.setState({[name] : new TimeSeries(data)});
+    } else {
+      console.warn(`${name} does not exist on TimeSeriesStore`);
+    }
   }  
 
 }

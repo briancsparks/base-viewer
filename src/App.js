@@ -1,4 +1,6 @@
-import React, { Component }   from 'react';
+
+import React                  from 'react';
+import Reflux                 from 'reflux';
 import {
   Nav, Navbar, NavItem, NavDropdown, Grid, MenuItem
 }                             from 'react-bootstrap';
@@ -15,29 +17,33 @@ import {
 }                             from './Actions/Actions';
 
 import getSessionData         from './Drivers/GetSessionData';
-
-// TODO: remove this
-import telemetryStore         from './Stores/TelemetryStore';
+import RawTelemetryStore      from './Stores/RawTelemetryStore';
 
 import './short.css'
 import './App.css';
+
+const sg                      = require('sgsg/lite');
+
+const deref                   = sg.deref;
 
 const {
   showDataTypesInConsole
 } = DebugActions;
 
 
-class App extends Component {
+class App extends Reflux.Component {
+
+  constructor(props) {
+    super(props);
+    this.store = RawTelemetryStore;
+  }
 
 
   render() {
 
-    // const sessions = Array.prototype.slice.apply(telemetryStore.data.sessions);
-    // const sessions = Array.prototype.slice.apply(telemetryStore.data.sessions);
-
-    const currentSessionId  = ((this.state) && this.state.currentSessionId) || '';
-    const sessionsCount     = ((this.state) && this.state.sessionsCount)    || 0;
-    const clientsCount      = ((this.state) && this.state.clientsCount)     || 0;
+    const sessionId       = deref(this.state, 'sessionId')                || '';
+    const sessionsCount   = deref(this.state, 'sessions.length')          || 0;
+    const clientsCount    = deref(this.state, 'clients.length')           || 0;
 
     const onSelectAction    = this._onItemChosen.bind(this);
 
@@ -71,7 +77,7 @@ class App extends Component {
 
               <NavItem>
                 <Navbar.Text pullRight>
-                  {`${currentSessionId}`}
+                  {`${sessionId}`}
                 </Navbar.Text>
               </NavItem>
             </Nav>
@@ -96,8 +102,6 @@ class App extends Component {
   }
 
   componentDidMount() {
-    telemetryStore.addChangeListener(this._onChange.bind(this));
-    
     getSessionData();
   }
 
@@ -105,20 +109,6 @@ class App extends Component {
     if (eventKey === 1.1) {
       showDataTypesInConsole();
     }
-  }
-
-  _onChange() {
-    const itemType  = this.props.itemType           || '';
-    const storeList = telemetryStore.data[itemType] || {};
-
-    const items = Array.prototype.slice.apply(storeList);
-
-    const currentSessionId = telemetryStore.data.currentSessionId;
-
-    const sessionsCount = telemetryStore.data.sessions.length;
-    const clientsCount  = telemetryStore.data.clients.length;
-
-    this.setState({items, currentSessionId, sessionsCount, clientsCount});
   }
 
 }

@@ -179,7 +179,7 @@ class TelemetryStore extends EventEmitter {
     this.data.firstTick = firstTick;
     this.data.lastTick  = lastTick;
 
-  // Split all items into those that have an ip and those that do not
+    // Split all items into those that have an ip and those that do not
     var allWithIp     = sg.deepCopy(_.filter(items, item => item.ip));
     var allWithoutIp  = sg.deepCopy(_.filter(items, item => !item.ip));
 
