@@ -34,7 +34,7 @@ export default class TimeSeriesStore extends Reflux.Store {
       var fn    = this[fname];
 
       if (_.isFunction(fn)) {
-        fn(x);
+        fn.call(this, x);
       } else {
         this.onRawTelemetryOtherChange(key, value, x);
       }
@@ -50,6 +50,14 @@ export default class TimeSeriesStore extends Reflux.Store {
   onRawTelemetryClientsChange(x) {
     // eslint-disable-next-line no-unused-vars
     var j = 10;
+  }  
+  
+  onRawTelemetryFirstTickChange(x) {
+    this.setState({firstTick: x.firstTick});
+  }  
+  
+  onRawTelemetryLastTickChange(x) {
+    this.setState({lastTick: x.lastTick});
   }  
   
   onRawTelemetryOtherChange(name, data, x) {

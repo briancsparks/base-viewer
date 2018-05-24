@@ -18,6 +18,7 @@ import {
   styler
 }                             from 'react-timeseries-charts';
 import { _ }                  from 'underscore';
+// import RawTelemetryStore from '../Stores/RawTelemetryStore';
 
 const sg                      = require('sgsg/lite');
 const deref                   = sg.deref;
@@ -59,12 +60,11 @@ export class IpAcrossTimeComponent extends Reflux.Component {
   constructor(props) {
     super(props);
     this.state = {
-      firstTick   : 0,
-      lastTick    : 1,
       timerange   : initialRange,
       brushrange  : null
     };
 
+    // this.stores = [TimeSeriesStore, RawTelemetryStore];
     this.store = TimeSeriesStore;
 
   }
@@ -240,6 +240,8 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       background: "#FEFEFE",
       paddingTop: 10
     };
+
+    console.log(`mwpupevents`, {mwpUpEvents});
 
     const loopNumMax        = mwpUpEvents ? mwpUpEvents.max('it.loopNum') : 100;
 
