@@ -72,7 +72,6 @@ export function attachToFeed() {
         if (payload) {
           dataCount += crackPayload(payload);
         }
-        // console.log(`Have ${dataCount}`);
 
         return again();
       });
@@ -132,8 +131,6 @@ function crackPayload(payload_) {
       // Count the nuber of items
       itemCount += arrayCount(aPayload) + arrayCount(aPayload.items);
   
-      // console.log(`Dispatching ${prefix}${key} from server`, aPayload.items || aPayload);
-        
       // We may eventually have intelligence here, but for now,
       // let the dynamic dispatcher handle it
   
@@ -192,13 +189,11 @@ export default function getSessionData() {
         numRequests += 1
 
         // This response doesnt matter much
-        //console.log(err, res.body || res.text || 'none');
 
         // I may have  gotten a response, but what matters is that the other loop gets data
         return again(1500);
       });
-    }, function() {
-      //console.log('Done driving initial fetch of data');
+    }, function done() {
     });
   });
 }

@@ -95,7 +95,7 @@ export default class RawTelemetryStore extends Reflux.Store {
     request.get(queryEndpoint).end(function(err, res) {
       if (!sg.ok(err, res) || !res.ok) { return; }
 
-      console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
+      // console.log(`on request for ${queryEndpoint}, got`, {err, ok:res.ok});
 
       var   items = _.map(res.body.Contents, item => {
         if (item.LastModified) {
