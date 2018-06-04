@@ -21,7 +21,7 @@ export default class RawTelemetryStore extends Reflux.Store {
   constructor() {
     super();
     this.state = {};
-    this.listenToMany(Actions, RawTimeSeriesActions);
+    this.listenables = [Actions, RawTimeSeriesActions];
   }
 
   onAddSessions(data_) {
@@ -136,6 +136,19 @@ export default class RawTelemetryStore extends Reflux.Store {
     this.setState(this.handleSetCurrentSession(sessionId, update));
   }
 
+  /**
+   * Returns an object that has zero telemetry (to be used to update state to an object
+   * that has empty objects for all current telemetry keys.)
+   */
+  emptyTelemetryUpdate() {
+    return sg.reduce(this.state, {}, function(m, v, k) {
+      if (sg.isObject(v) && 'columns' in v && 'points' in v) {
+        return sg.kv(m, k, {});
+      }
+      return m;
+    });
+  }
+
   onAddRawTimeSeriesFeedData(payload) {
     const self = this;
 
@@ -144,6 +157,10 @@ export default class RawTelemetryStore extends Reflux.Store {
     var   tick0       = dataPoints.tick0 || 0;
     const meta        = _.omit(dataPoints, 'items', 'payload');
     var   newState    = {};
+
+    if (meta.sessionId && this.state.sessionId && meta.sessionId !== this.state.sessionId) {
+      this.setState(this.emptyTelemetryUpdate());
+    }
 
     // If you want real dates (you dont), comment this out
     tick0 = 0;
@@ -189,7 +206,7 @@ export default class RawTelemetryStore extends Reflux.Store {
     var allWithIp     = sg.deepCopy(_.filter(items, item => item.ip));
     var allWithoutIp  = sg.deepCopy(_.filter(items, item => !item.ip));
 
-    // allWithIp = _.filter(allWithIp, item => !(item.who === 'arp'));
+    allWithIp = _.filter(allWithIp, item => !(item.who === 'arp'));
     allWithIp = _.filter(allWithIp, item => !(item.eventType === 'sentPacket'));
     allWithIp = _.filter(allWithIp, item => !(item.eventType === 'socketAvailability'));
     allWithIp = _.filter(allWithIp, item => !(item.eventType === 'stallSocketWrite'));

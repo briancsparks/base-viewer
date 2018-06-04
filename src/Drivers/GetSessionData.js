@@ -8,6 +8,8 @@ import { config }   from '../utils-to-move';
 import {
   Actions,
   TimeSeriesActions,
+  RawTimeSeriesActions,
+  sessionInfoRequestId
 }                             from '../Actions/Actions';
 import RawTelemetryStore      from '../Stores/RawTelemetryStore';
 import TimeSeriesStore        from '../Stores/TimeSeriesStore';
@@ -24,7 +26,7 @@ const {
 
 const {
   addRawTimeSeriesFeedData,
-} = TimeSeriesActions;
+} = RawTimeSeriesActions;
 
 const {
   addSessions,
@@ -101,14 +103,14 @@ function crackPayload(payload_) {
       payload = payload[dataBootstrap];
       prefix = `${prefix}${dataBootstrap}.`;
   
-    // } else if (payload[sessionInfoRequestId]) {    /* other message names here */
-    //   payload = payload[sessionInfoRequestId];
-    //   prefix = `${prefix}${sessionInfoRequestId}.`;
+    } else if (payload[sessionInfoRequestId]) {    /* other message names here */
+      payload = payload[sessionInfoRequestId];
+      prefix = `${prefix}${sessionInfoRequestId}.`;
     }
   
     // If it is raw data, the next index will be 'dataPoints'
     if (payload.dataPoints && payload.dataPoints.items) {
-      addRawTimeSeriesFeedData(payload);
+      return addRawTimeSeriesFeedData(payload);
     }
   
     // OK, we are at the real data
@@ -147,17 +149,16 @@ function crackPayload(payload_) {
   return itemCount;
 }
 
-const goodSamples = [{
+const xtime = new Date();
+const goodSamples = _.map([{
   "sessionId" : "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC-20180312124354509",
-  "ctime" : new Date(),
-  "mtime" : new Date(),
-  "clientId" : "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC"
 }, {
   "sessionId" : "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC-20180508184651460",
-  "ctime" : new Date(),
-  "mtime" : new Date(),
-  "clientId" : "A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC"
-}];
+}, {
+  "sessionId" : "mYagFRwcqeyX6E0ISpC7WV5sA1yVadIWowiADINqxHUG4ldh0rUcPmc4B0iKKVo0-20180601165717403",
+}, {
+  "sessionId" : "mYagFRwcqeyX6E0ISpC7WV5sA1yVadIWowiADINqxHUG4ldh0rUcPmc4B0iKKVo0-20180603220418569",
+}], item => sg.extend({mtime:xtime, ctime:xtime, clientId:item.sessionId.split('-')[0]}, item));
 
 // A00CIOMLvczYMoUcdf0Vhy6SDuzlvwgWlXsqiu70vIOVttuC10gx0SojgN8faUHC-20180509123707558
 
