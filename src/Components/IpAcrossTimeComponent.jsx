@@ -19,6 +19,10 @@ import {
 }                             from 'react-timeseries-charts';
 import { _ }                  from 'underscore';
 
+import {
+  IpTimeLabelAxis
+}                             from './IpTimeParts';
+
 const sg                      = require('sgsg/lite');
 const deref                   = sg.deref;
 
@@ -47,12 +51,61 @@ const chartStyle = {
   marginBottom: 10
 };
 
-// const brushStyle = {
-//   boxShadow: "inset 0px 2px 5px -2px rgba(189, 189, 189, 0.75)",
-//   background: "#FEFEFE",
-//   paddingTop: 10
-// };
+class IpTimeLabelAxis2 extends Reflux.Component {
 
+  constructor(props) {
+    super(props);
+    // this.state = {
+    //   foo: 'bar'
+    // };
+    this.setState({ key: Math.random() });
+
+    this.store = TimeSeriesStore;
+  }
+
+  render() {
+    const events  = deref(this, 'props.charts.events');
+
+    if (!events || events.length <= 1) {
+      return (
+        <div />
+      )
+    }
+
+    const yLabel = deref(this, 'props.charts.yLabel');
+
+    const event1      = events[0];
+    const deepKey     = event1.deepKey;
+    const eventType   = event1.eventType;
+  
+    const defDeepKey      = _.last(deepKey.split('.'));
+    const timeSeries      = deref(this.state, eventType) || defTimeSeries(eventType, {[defDeepKey]:100});
+    const seriesMax       = timeSeries.max(deepKey) || 100;
+    const seriesAvg       = timeSeries.avg(deepKey) || 50;
+    const seriesMin       = Math.min(timeSeries.min(deepKey), 0);
+  
+    const seriesSummaryValues = [
+      { label: "Max", value: lineChartFormat(seriesMax) },
+      { label: "Avg", value: lineChartFormat(seriesAvg) }
+    ];
+  
+    return (
+      <LabelAxis id={`${yLabel}yaxis2`}
+      label={`${yLabel}right`}
+      values={seriesSummaryValues}
+      min={seriesMin}
+      max={seriesMax}
+      width={140}
+      type="linear"
+      format=",.1f" />
+    );
+  }
+
+  // componentDidMount() {
+  //   var i = 10;
+  // }
+
+}
 
 export class IpAcrossTimeComponent extends Reflux.Component {
 
@@ -113,10 +166,10 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       }];
     };
 
-  const seriesSummaryValues = [
-      { label: "Max", value: lineChartFormat(seriesMax) },
-      { label: "Avg", value: lineChartFormat(seriesAvg) }
-    ];
+    const seriesSummaryValues = [
+        { label: "Max", value: lineChartFormat(seriesMax) },
+        { label: "Avg", value: lineChartFormat(seriesAvg) }
+      ];
 
     const needSecondLabelAxis = ((chartsA.events.length > 1) && (chartsA.events[1].deepKey !== deepKey));
 
@@ -218,6 +271,8 @@ export class IpAcrossTimeComponent extends Reflux.Component {
             type="linear"
             format=",.1f" />
 
+          {/* <IpTimeLabelAxis2 charts={chartsA} qqq={123} /> */}
+
           <Charts>
 
             {_.map(chartsA.events, (event, n) => {
@@ -225,6 +280,7 @@ export class IpAcrossTimeComponent extends Reflux.Component {
             })}
           </Charts>
 
+          {IpTimeLabelAxis({props:{charts:chartsA}})}
           {secondLabelAxis()}
           
         </ChartRow>
