@@ -20,7 +20,7 @@ import {
 import { _ }                  from 'underscore';
 
 import {
-  IpTimeLabelAxis
+  ipTimeLabelAxis
 }                             from './IpTimeParts';
 
 const sg                      = require('sgsg/lite');
@@ -51,59 +51,6 @@ const chartStyle = {
   marginBottom: 10
 };
 
-class IpTimeLabelAxis2 extends Reflux.Component {
-
-  constructor(props) {
-    super(props);
-    this.setState({ key: Math.random() });
-
-    this.store = TimeSeriesStore;
-  }
-
-  render() {
-    const events  = deref(this, 'props.charts.events');
-
-    if (!events || events.length < 1) {
-      return (
-        <div />
-      )
-    }
-
-    const yLabel = deref(this, 'props.charts.yLabel');
-
-    const event1      = events[0];
-    const deepKey     = event1.deepKey;
-    const eventType   = event1.eventType;
-  
-    const defDeepKey      = _.last(deepKey.split('.'));
-    const timeSeries      = deref(this.state, eventType) || defTimeSeries(eventType, {[defDeepKey]:100});
-    const seriesMax       = timeSeries.max(deepKey) || 100;
-    const seriesAvg       = timeSeries.avg(deepKey) || 50;
-    const seriesMin       = Math.min(timeSeries.min(deepKey), 0);
-  
-    const seriesSummaryValues = [
-      { label: "Max", value: lineChartFormat(seriesMax) },
-      { label: "Avg", value: lineChartFormat(seriesAvg) }
-    ];
-  
-    return (
-      <LabelAxis id={`${yLabel}yaxis2`}
-      label={`${yLabel}right`}
-      values={seriesSummaryValues}
-      min={seriesMin}
-      max={seriesMax}
-      width={140}
-      type="linear"
-      format=",.1f" />
-    );
-  }
-
-  componentDidMount() {
-    var i = 10;
-    this.setState({ key: Math.random() });
-  }
-
-}
 
 export class IpAcrossTimeComponent extends Reflux.Component {
 
@@ -117,8 +64,15 @@ export class IpAcrossTimeComponent extends Reflux.Component {
     this.store = TimeSeriesStore;
   }
 
-  renderScatterCharts(timerange, chartsA, chartsB = {}) {
+  renderScatterCharts(timerange, chartsA_, chartsB = {}) {
     const self = this;
+
+    const chartsA = _.isArray(chartsA_) ? chartsA_[0] : chartsA_;
+    const chartsAx = sg.reduce(chartsA_, {events:[]}, (m, value, index) => {
+      m = sg._extend(_.omit(value, 'events'), m);
+      m.events = [...m.events, ...value.events];
+      return m;
+    });
 
     const yLabelA = chartsA.yLabel;
     // const yLabelB = chartsB.yLabel;
@@ -200,45 +154,6 @@ export class IpAcrossTimeComponent extends Reflux.Component {
       );
     }
 
-    const secondLabelAxis = function() {
-
-      if (chartsA.events.length <= 1) {
-        return (
-          <div />
-        )
-      }
-      const deepKey2   = chartsA.events[1].deepKey;
-      if (deepKey === deepKey2) {
-        return (
-          <div />
-        )
-      }
-
-      const eventType2 = chartsA.events[1].eventType;
-
-      const defDeepKey2      = _.last(deepKey2.split('.'));
-      const timeSeries2      = deref(self.state, eventType2) || defTimeSeries(eventType2, {[defDeepKey2]:100});
-      const seriesMax2       = timeSeries2.max(deepKey2) || 100;
-      const seriesAvg2       = timeSeries2.avg(deepKey2) || 50;
-      const seriesMin2       = Math.min(timeSeries2.min(deepKey2), 0);
-
-      const seriesSummaryValues2 = [
-        { label: "Max", value: lineChartFormat(seriesMax2) },
-        { label: "Avg", value: lineChartFormat(seriesAvg2) }
-      ];
-
-      return (
-        <LabelAxis id={yLabelA+"yaxis2"}
-        label={yLabelA+" right"}
-        values={seriesSummaryValues2}
-        min={seriesMin2}
-        max={seriesMax2}
-        width={140}
-        type="linear"
-        format=",.1f" />
-      );
-    };
-
     return(
       <ChartContainer timeRange={timerange}
         format="relative"
@@ -269,10 +184,8 @@ export class IpAcrossTimeComponent extends Reflux.Component {
             type="linear"
             format=",.1f" />
 
-          {/* <IpTimeLabelAxis2 key={1234567} id="foobar" charts={chartsA} qqq={123} /> */}
-
-          {IpTimeLabelAxis({charts:chartsA})}
-          {/* <IpTimeLabelAxis charts={chartsA} /> */}
+          {ipTimeLabelAxis({chart: chartsA_, state: self.state})}
+          {/* <ipTimeLabelAxis charts={chartsA} /> */}
 
           <Charts>
 
@@ -321,12 +234,16 @@ export class IpAcrossTimeComponent extends Reflux.Component {
           <div className="col-md-12" style={chartStyle}>
             <Resizable>
 
-              {this.renderScatterCharts(brushrange, {
+              {this.renderScatterCharts(brushrange, [{
                 yLabel : 'ipno', events:[
-                    {eventType:'allWithIp',     deepKey:"it.nodeNum"},
+                    {eventType:'allWithIp',     deepKey:"it.nodeNum"}
+                    // ,{eventType:'allWithoutIp',  deepKey:"it.tick"}
+                ]
+              }, {
+                yLabel : 'tick', events:[
                     {eventType:'allWithoutIp',  deepKey:"it.tick"}
                 ]
-              })}
+              }])}
 
             </Resizable>
           </div>
@@ -336,12 +253,12 @@ export class IpAcrossTimeComponent extends Reflux.Component {
           <div className="col-md-12" style={chartStyle}>
             <Resizable>
 
-              {this.renderScatterCharts(brushrange, {
+              {this.renderScatterCharts(brushrange, [{
                 yLabel : 'nn', events:[
                     {eventType:'snmp_found_printer_MDL', deepKey:"it.nodeNum"},
                     {eventType:'snmpblaster_found_printer_MDL', deepKey:"it.nodeNum"}
                 ]
-              })}
+              }])}
 
             </Resizable>
           </div>
@@ -351,9 +268,9 @@ export class IpAcrossTimeComponent extends Reflux.Component {
           <div className="col-md-12" style={chartStyle}>
             <Resizable>
 
-              {this.renderScatterCharts(brushrange, {
+              {this.renderScatterCharts(brushrange, [{
                 yLabel : 'nn', events:[{eventType:'sentPacket', deepKey:"it.nodeNum"}]
-              })}
+              }])}
 
             </Resizable>
           </div>
