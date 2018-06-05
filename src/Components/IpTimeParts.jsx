@@ -86,7 +86,7 @@ export function ipTimeLabelAxis({chart, state}) {
       seriesMax             = Math.max(seriesMax, timeSeries.max(deepKey) || 100);
       seriesAvg             = timeSeries.avg(deepKey) || 50;
       seriesMin             = Math.min(seriesMin, timeSeries.min(deepKey));
-      
+
       // const seriesMax       = timeSeries.max(deepKey) || 100;
       // const seriesAvg       = timeSeries.avg(deepKey) || 50;
       // const seriesMin       = Math.min(timeSeries.min(deepKey), 0);
@@ -97,10 +97,12 @@ export function ipTimeLabelAxis({chart, state}) {
       { label: "Max", value: lineChartFormat(seriesMax) },
       { label: "Avg", value: lineChartFormat(seriesAvg) }
     ];
+
+    const axisId = `${yLabel}yaxis${index}`;
   
     return (
-      <LabelAxis id={`${yLabel}yaxis${index}`}
-      label={`${yLabel}right`}
+      <LabelAxis id={axisId}
+      label={`${yLabel}`}
       values={seriesSummaryValues}
       min={seriesMin}
       max={seriesMax}
