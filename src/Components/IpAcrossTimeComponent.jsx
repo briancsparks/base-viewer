@@ -55,9 +55,6 @@ class IpTimeLabelAxis2 extends Reflux.Component {
 
   constructor(props) {
     super(props);
-    // this.state = {
-    //   foo: 'bar'
-    // };
     this.setState({ key: Math.random() });
 
     this.store = TimeSeriesStore;
@@ -66,7 +63,7 @@ class IpTimeLabelAxis2 extends Reflux.Component {
   render() {
     const events  = deref(this, 'props.charts.events');
 
-    if (!events || events.length <= 1) {
+    if (!events || events.length < 1) {
       return (
         <div />
       )
@@ -101,9 +98,10 @@ class IpTimeLabelAxis2 extends Reflux.Component {
     );
   }
 
-  // componentDidMount() {
-  //   var i = 10;
-  // }
+  componentDidMount() {
+    var i = 10;
+    this.setState({ key: Math.random() });
+  }
 
 }
 
@@ -271,7 +269,10 @@ export class IpAcrossTimeComponent extends Reflux.Component {
             type="linear"
             format=",.1f" />
 
-          {/* <IpTimeLabelAxis2 charts={chartsA} qqq={123} /> */}
+          {/* <IpTimeLabelAxis2 key={1234567} id="foobar" charts={chartsA} qqq={123} /> */}
+
+          {IpTimeLabelAxis({charts:chartsA})}
+          {/* <IpTimeLabelAxis charts={chartsA} /> */}
 
           <Charts>
 
@@ -280,8 +281,7 @@ export class IpAcrossTimeComponent extends Reflux.Component {
             })}
           </Charts>
 
-          {IpTimeLabelAxis({props:{charts:chartsA}})}
-          {secondLabelAxis()}
+          {/* {secondLabelAxis()} */}
           
         </ChartRow>
       </ChartContainer>

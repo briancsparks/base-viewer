@@ -34,10 +34,11 @@ export function IpTimeLabelAxis(props) {
   // }
 
   // render() {
-    const self = props;
+
+    const self = {props};
     const events  = deref(self, 'props.charts.events');
 
-    if (!events || events.length <= 1) {
+    if (!events || events.length < 1) {
       return (
         <div />
       )
