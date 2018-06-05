@@ -61,7 +61,7 @@ export default class TimeSeriesStore extends Reflux.Store {
       this.setState({[name] : new TimeSeries(data)});
       
     } else {
-      console.warn(`${name} does not exist on TimeSeriesStore`);
+      // console.warn(`${name} does not exist on TimeSeriesStore`);
     }
   }  
 

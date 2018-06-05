@@ -12,7 +12,7 @@ import {
   ChartRow,
   ChartContainer,
   Brush,
-  YAxis, LabelAxis,
+  YAxis,
   LineChart, ScatterChart,
   Charts,
   styler
@@ -30,7 +30,7 @@ const styleColors = 'steelblue,red,teal,orange'.split(',');
 
 const initialRange = new TimeRange([75 * 60 * 1000, 125 * 60 * 1000]);
 
-const lineChartFormat     = format(".1f");
+// const lineChartFormat     = format(".1f");
 const byteCountFormat     = format(".1f");                // eslint-disable-line no-unused-vars
 
 function defTimeSeries(name, obj) {
@@ -68,23 +68,12 @@ export class IpAcrossTimeComponent extends Reflux.Component {
     const self = this;
 
     const chartsA = _.isArray(chartsA_) ? chartsA_[0] : chartsA_;
-    const chartsAx = sg.reduce(chartsA_, {events:[]}, (m, value, index) => {
-      m = sg._extend(_.omit(value, 'events'), m);
-      m.events = [...m.events, ...value.events];
-      return m;
-    });
-
-    const yLabelA = chartsA.yLabel;
-    // const yLabelB = chartsB.yLabel;
 
     const eventType = chartsA.events[0].eventType;
     const deepKey   = chartsA.events[0].deepKey;
 
     const defDeepKey      = _.last(deepKey.split('.'));
     const timeSeries      = deref(this.state, eventType) || defTimeSeries(eventType, {[defDeepKey]:100});
-    // const seriesMax       = timeSeries.max(deepKey) || 100;
-    // const seriesAvg       = timeSeries.avg(deepKey) || 50;
-    // const seriesMin       = Math.min(timeSeries.min(deepKey), 0);
 
     const style = styler([                // eslint-disable-line no-unused-vars
       { key: deepKey, color: "steelblue", width: 1, opacity: 0.5 }
@@ -117,13 +106,6 @@ export class IpAcrossTimeComponent extends Reflux.Component {
         value: "Barsdaafasdfs"
       }];
     };
-
-    // const seriesSummaryValues = [
-    //     { label: "Max", value: lineChartFormat(seriesMax) },
-    //     { label: "Avg", value: lineChartFormat(seriesAvg) }
-    //   ];
-
-    const needSecondLabelAxis = ((chartsA.events.length > 1) && (chartsA.events[1].deepKey !== deepKey));
 
     const oneScatterChartA = function(yLabel, {eventType, deepKey}, n) {
 
@@ -172,17 +154,8 @@ export class IpAcrossTimeComponent extends Reflux.Component {
             color: '#DDD'
           }}
         >
-          {/* <LabelAxis id={yLabelA+"yaxis"}
-            label={yLabelA}
-            values={seriesSummaryValues}
-            min={seriesMin}
-            max={seriesMax}
-            width={140}
-            type="linear"
-            format=",.1f" /> */}
 
           {ipTimeLabelAxis({chart: chartsA_, state: self.state})}
-          {/* <ipTimeLabelAxis charts={chartsA} /> */}
 
           <Charts>
 
@@ -192,13 +165,8 @@ export class IpAcrossTimeComponent extends Reflux.Component {
               }));
             })}
 
-            {/*  {_.map(chartsA.events, (event, n) => {
-               return oneScatterChartA(event, n)
-             })} */}
           </Charts>
 
-          {/* {secondLabelAxis()} */}
-          
         </ChartRow>
       </ChartContainer>
     );

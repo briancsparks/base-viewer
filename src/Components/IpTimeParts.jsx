@@ -103,6 +103,7 @@ export function ipTimeLabelAxis({chart, state}) {
     return (
       <LabelAxis id={axisId}
       label={`${yLabel}`}
+      key={index}
       values={seriesSummaryValues}
       min={seriesMin}
       max={seriesMax}

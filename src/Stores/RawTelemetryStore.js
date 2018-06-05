@@ -179,7 +179,7 @@ export default class RawTelemetryStore extends Reflux.Store {
     // Clean event data
     items = _.map(items, (event) => {
       if (!event.eventType) {
-        console.log(`event without type`, {event});
+        // console.log(`event without type`, {event});
       }
 
       var result = sg.kv(event, 'eventTypeKey', cleanKey(event.eventType));
