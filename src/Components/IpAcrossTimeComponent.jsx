@@ -210,7 +210,6 @@ export class IpAcrossTimeComponent extends Reflux.Component {
               {this.renderScatterCharts(brushrange, [{
                 yLabel : 'ipno', events:[
                     {eventType:'allWithIp',     deepKey:"it.nodeNum"}
-                    // ,{eventType:'allWithoutIp',  deepKey:"it.tick"}
                 ]
               }, {
                 yLabel : 'tick', secondary: true, events:[
