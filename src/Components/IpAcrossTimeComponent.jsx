@@ -167,6 +167,8 @@ export class IpAcrossTimeComponent extends Reflux.Component {
 
           </Charts>
 
+            {ipTimeLabelAxis({chart: chartsA_, state: self.state, secondary: true})}
+
         </ChartRow>
       </ChartContainer>
     );
@@ -211,7 +213,7 @@ export class IpAcrossTimeComponent extends Reflux.Component {
                     // ,{eventType:'allWithoutIp',  deepKey:"it.tick"}
                 ]
               }, {
-                yLabel : 'tick', events:[
+                yLabel : 'tick', secondary: true, events:[
                     {eventType:'allWithoutIp',  deepKey:"it.tick"}
                 ]
               }])}
