@@ -5,7 +5,7 @@
   "proxy": "http://local-1-195-76.mobilewebassist.net/",
   "dependencies": {
     "ajv": "^6.4.0",
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^3.4.1",
     "d3-format": "^1.2.2",
     "fbemitter": "^2.1.1",
     "flux": "^3.1.3",
